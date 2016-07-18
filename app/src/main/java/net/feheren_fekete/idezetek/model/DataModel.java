@@ -31,35 +31,37 @@ public class DataModel {
     }
 
     public List<Quote> loadQuotes(String tag) {
-        List<Quote> result = new ArrayList<>();
+        synchronized (this) {
+            List<Quote> result = new ArrayList<>();
 
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new InputStreamReader(
-                    new FileInputStream(mQuotesDirPath + File.separator + tag + QUOTES_FILE_POSTFIX)));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                int colon = line.indexOf(':');
-                if (colon != -1) {
-                    String author = line.substring(0, colon);
-                    String quote = line.substring(colon + 1);
-                    result.add(new Quote(author, quote));
+            BufferedReader reader = null;
+            try {
+                reader = new BufferedReader(new InputStreamReader(
+                        new FileInputStream(mQuotesDirPath + File.separator + tag + QUOTES_FILE_POSTFIX)));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    int colon = line.indexOf(':');
+                    if (colon != -1) {
+                        String author = line.substring(0, colon);
+                        String quote = line.substring(colon + 1);
+                        result.add(new Quote(author, quote));
+                    }
+                }
+            } catch (IOException e) {
+                // TODO: Report error.
+                Log.e(TAG, "Cannot load quotes", e);
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                        // Ignore.
+                    }
                 }
             }
-        } catch (IOException e) {
-            // TODO: Report error.
-            Log.e(TAG, "Cannot load quotes", e);
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    // Ignore.
-                }
-            }
+
+            return result;
         }
-
-        return result;
     }
 
     public void initDefaultQuotes() {

@@ -14,36 +14,36 @@ public class FileUtils {
 
     private static final String TAG = FileUtils.class.getSimpleName();
 
-    public static void copyFileOrDirectory(String srcDir, String dstDir) {
+    public static void copyFileOrDirectory(String sourcePath, String destinationPath) {
 
         try {
-            File src = new File(srcDir);
-            File dst = new File(dstDir, src.getName());
+            File sourceFile = new File(sourcePath);
+            File destinationFile = new File(destinationPath, sourceFile.getName());
 
-            if (src.isDirectory()) {
-                String files[] = src.list();
+            if (sourceFile.isDirectory()) {
+                String files[] = sourceFile.list();
                 int filesLength = files.length;
                 for (int i = 0; i < filesLength; i++) {
-                    String src1 = (new File(src, files[i]).getPath());
-                    String dst1 = dst.getPath();
+                    String src1 = (new File(sourceFile, files[i]).getPath());
+                    String dst1 = destinationFile.getPath();
                     copyFileOrDirectory(src1, dst1);
                 }
             } else {
-                copyFile(src, dst);
+                copyFile(sourceFile, destinationFile);
             }
         } catch (Exception e) {
             Log.e(TAG, "Cannot copy", e);
         }
     }
 
-    public static void copyFile(File src, File dst) {
+    public static void copyFile(File sourceFile, File destinationFile) {
         InputStream in = null;
 
         try {
-            in = new FileInputStream(src);
-            copyFile(in, dst);
+            in = new FileInputStream(sourceFile);
+            copyFile(in, destinationFile);
         } catch (IOException e) {
-            Log.e(TAG, "Cannot copy file: " + dst.getAbsolutePath(), e);
+            Log.e(TAG, "Cannot copy file: " + destinationFile.getAbsolutePath(), e);
         } finally {
             if (in != null) {
                 try {
@@ -55,18 +55,26 @@ public class FileUtils {
         }
     }
 
-    public static void copyFile(InputStream in, File dst) {
+    public static void copyFile(InputStream inputStream, File destinationFile) {
         OutputStream out = null;
 
+        File destinationDir = destinationFile.getParentFile();
+        if (!destinationDir.exists()) {
+            if (!destinationDir.mkdirs()) {
+                Log.e(TAG, "Cannot create directory: " + destinationFile.getAbsolutePath());
+                return;
+            }
+        }
+
         try {
-            out = new FileOutputStream(dst);
+            out = new FileOutputStream(destinationFile);
             byte[] buf = new byte[1024];
             int len;
-            while ((len = in.read(buf)) > 0) {
+            while ((len = inputStream.read(buf)) > 0) {
                 out.write(buf, 0, len);
             }
         } catch (IOException e) {
-            Log.e(TAG, "Cannot copy file: " + dst.getAbsolutePath(), e);
+            Log.e(TAG, "Cannot copy file: " + destinationFile.getAbsolutePath(), e);
         } finally {
             if (out != null) {
                 try {

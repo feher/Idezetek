@@ -60,16 +60,18 @@ public class QuotesWidgetService extends Service {
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        String action = intent.getAction();
-        if (ACTION_UPDATE_WIDGETS.equals(action)) {
-            updateWidgets(intent);
-        } else if (ACTION_REMOVE_WIDGETS.equals(action)) {
-            removeWidgets(intent);
-        } else if (ACTION_SHOW_NEXT_QUOTE.equals(action)) {
-            showNextQuote(intent);
-        } else if (ACTION_SHOW_PREVIOUS_QUOTE.equals(action)) {
-            showPreviousQuote(intent);
+    public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
+        if (intent != null) {
+            String action = intent.getAction();
+            if (ACTION_UPDATE_WIDGETS.equals(action)) {
+                updateWidgets(intent);
+            } else if (ACTION_REMOVE_WIDGETS.equals(action)) {
+                removeWidgets(intent);
+            } else if (ACTION_SHOW_NEXT_QUOTE.equals(action)) {
+                showNextQuote(intent);
+            } else if (ACTION_SHOW_PREVIOUS_QUOTE.equals(action)) {
+                showPreviousQuote(intent);
+            }
         }
         return START_STICKY;
     }
@@ -116,7 +118,7 @@ public class QuotesWidgetService extends Service {
 
                     Quote quote = widgetInfo.quotes.get(quoteIndex);
                     RemoteViews views = new RemoteViews(getPackageName(), R.layout.quotes_widget);
-                    views.setTextViewText(R.id.quote_text, quote.getQuote());
+                    views.setTextViewText(R.id.book_title_text, quote.getQuote());
                     views.setTextViewText(R.id.quote_author, quote.getAuthor());
                     views.setTextViewText(R.id.quote_index, String.valueOf(quoteIndex + 1));
 

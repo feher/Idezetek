@@ -10,19 +10,25 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name=".QuotesActivity">
+            android:name=".quotebooks.QuoteBooksActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".widget.QuotesWidgetService">
-        </service>
+        <activity
+            android:name=".QuotesActivity"
+            android:parentActivityName=".quotebooks.QuoteBooksActivity">
+            <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="net.feheren_fekete.idezetek.quotebooks.QuoteBooksActivity" />
+        </activity>
 
-        <receiver
-            android:name=".widget.QuotesWidgetProvider" >
+        <service android:name=".widget.QuotesWidgetService"></service>
+
+        <receiver android:name=".widget.QuotesWidgetProvider">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

@@ -2,42 +2,76 @@ package net.feheren_fekete.idezetek.model;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import net.feheren_fekete.idezetek.utils.FileUtils;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DataModel {
 
+    private static final class BooksChangedEvent {
+        public final DataModel sender;
+        public BooksChangedEvent(DataModel sender) {
+            this.sender = sender;
+        }
+    }
+
     private static final String TAG = DataModel.class.getSimpleName();
 
-    private static final String QUOTES_DIR = "quotes";
-    private static final String QUOTES_FILE_POSTFIX = "_quotes.txt";
+    private static final String BOOKS_FILE_NAME = "books.txt";
+    private static final String QUOTES_FILE_PREFIX = "quotes_";
+    private static final String QUOTES_FILE_POSTFIX = ".txt";
 
     private Context mContext;
     private String mQuotesDirPath;
+    private @Nullable List<Book> mBooks;
 
     public DataModel(Context context) {
         mContext = context;
-        mQuotesDirPath = mContext.getFilesDir().getAbsolutePath() + File.separator + QUOTES_DIR;
+        mQuotesDirPath = mContext.getFilesDir().getAbsolutePath();
+        mBooks = null;
+        EventBus.getDefault().register(this);
     }
 
-    public List<Quote> loadQuotes(String tag) {
+    public void close() {
+        EventBus.getDefault().unregister(this);
+    }
+
+    public List<Book> loadBooks() {
+        synchronized (this) {
+            return getBooks();
+        }
+    }
+
+    public List<Quote> loadQuotes(String bookTitle) {
         synchronized (this) {
             List<Quote> result = new ArrayList<>();
+
+            Book book = getBookByTitle(bookTitle);
+            if (book == null) {
+                return result;
+            }
 
             BufferedReader reader = null;
             try {
                 reader = new BufferedReader(new InputStreamReader(
-                        new FileInputStream(mQuotesDirPath + File.separator + tag + QUOTES_FILE_POSTFIX)));
+                        new FileInputStream(mQuotesDirPath + File.separator + book.getFileName())));
                 String line;
                 while ((line = reader.readLine()) != null) {
                     int colon = line.indexOf(':');
@@ -64,28 +98,186 @@ public class DataModel {
         }
     }
 
+    public void importQuotes(InputStream quotesStream, String bookTitle) {
+        String quotesFileName = QUOTES_FILE_PREFIX
+                + String.valueOf(System.currentTimeMillis())
+                + QUOTES_FILE_POSTFIX;
+        copyQuotes(quotesStream, quotesFileName);
+        addOrUpdateBook(new Book(bookTitle, quotesFileName));
+        saveBooks();
+    }
+
+    public void updateBook(Book book) {
+        addOrUpdateBook(book);
+        saveBooks();
+    }
+
+    public void deleteBook(Book book) {
+        List<Book> books = getBooks();
+        int existingBookIndex = books.indexOf(book);
+        if (existingBookIndex != -1) {
+            books.remove(existingBookIndex);
+        }
+        saveBooks();
+    }
+
+    public boolean doesBookExist(String title) {
+        for (Book book : mBooks) {
+            if (book.getTitle().equals(title)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void initDefaultQuotes() {
-        File destinationFile = new File(mQuotesDirPath + File.separator + "buddha" + QUOTES_FILE_POSTFIX);
-        if (destinationFile.exists()) {
-            return;
+        synchronized (this) {
+            List<Book> books = getBooks();
+            if (!books.isEmpty()) {
+                return;
+            }
+
+            AssetManager assetManager = mContext.getAssets();
+            InputStream inputStream = null;
+            try {
+                inputStream = assetManager.open("buddha_quotes.txt");
+                importQuotes(inputStream, "Buddha");
+            } catch (IOException e) {
+                // TODO: Report error.
+                Log.e(TAG, "Cannot init default quotes", e);
+            } finally {
+                if (inputStream != null) {
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                        // Ignore.
+                    }
+                }
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onBooksChangedEvent(DataModel.BooksChangedEvent event) {
+        if (event.sender != this) {
+            mBooks = reloadBooks();
+        }
+    }
+
+    @Nullable
+    private Book getBookByTitle(String title) {
+        List<Book> books = getBooks();
+        for (Book book : books) {
+            if (book.getTitle().equals(title)) {
+                return book;
+            }
+        }
+        return null;
+    }
+
+    private List<Book> getBooks() {
+        if (mBooks == null) {
+            mBooks = reloadBooks();
+        }
+        return mBooks;
+    }
+
+    private List<Book> reloadBooks() {
+        List<Book> result = new ArrayList<>();
+
+        if (!assureBooksFile()) {
+            return result;
         }
 
-        AssetManager assetManager = mContext.getAssets();
-        InputStream inputStream = null;
+        BufferedReader reader = null;
         try {
-            inputStream = assetManager.open("buddha" + QUOTES_FILE_POSTFIX);
-            FileUtils.copyFile(inputStream, destinationFile);
+            reader = new BufferedReader(new InputStreamReader(
+                    new FileInputStream(mQuotesDirPath + File.separator + BOOKS_FILE_NAME)));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                int colon = line.indexOf(':');
+                if (colon != -1) {
+                    String title = line.substring(0, colon);
+                    String fileName = line.substring(colon + 1);
+                    result.add(new Book(title, fileName));
+                }
+            }
         } catch (IOException e) {
             // TODO: Report error.
-            Log.e(TAG, "Cannot init default quotes", e);
+            Log.e(TAG, "Cannot load books", e);
         } finally {
-            if (inputStream != null) {
+            if (reader != null) {
                 try {
-                    inputStream.close();
+                    reader.close();
                 } catch (IOException e) {
                     // Ignore.
                 }
             }
+        }
+
+        return result;
+    }
+
+    private void saveBooks() {
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream(mQuotesDirPath + File.separator + BOOKS_FILE_NAME)));
+            for (Book book : mBooks) {
+                writer.write(book.getTitle() + ":" + book.getFileName());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            // TODO: Report error.
+            Log.e(TAG, "Cannot store books", e);
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    // Ignore.
+                }
+            }
+        }
+
+        EventBus.getDefault().post(new BooksChangedEvent(this));
+    }
+
+    private boolean assureBooksFile() {
+        File booksFile = new File(mQuotesDirPath + File.separator + BOOKS_FILE_NAME);
+        if (!booksFile.exists()) {
+            try {
+                File parentDir = booksFile.getParentFile();
+                if (!parentDir.exists()) {
+                    if (!parentDir.mkdirs()) {
+                        // TODO: Report error.
+                        Log.e(TAG, "Cannot create dir " + parentDir.getAbsolutePath());
+                        return false;
+                    }
+                }
+                return booksFile.createNewFile();
+            } catch (IOException e) {
+                // TODO: Report error.
+                Log.e(TAG, "Cannot create books file", e);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void copyQuotes(InputStream quotesStream, String quotesFileName) {
+        File quotesFile = new File(mQuotesDirPath + File.separator + quotesFileName);
+        FileUtils.copyFile(quotesStream, quotesFile);
+    }
+
+    private void addOrUpdateBook(Book book) {
+        List<Book> books = getBooks();
+        int existingBookIndex = books.indexOf(book);
+        if (existingBookIndex != -1) {
+            books.get(existingBookIndex).setFileName(book.getFileName());
+            books.get(existingBookIndex).setTitle(book.getTitle());
+        } else {
+            books.add(book);
         }
     }
 

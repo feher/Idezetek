@@ -13,7 +13,10 @@ import java.util.List;
 
 public class QuotesActivity extends AppCompatActivity implements QuotesAdapter.Listener {
 
-    private String mQuotesTag;
+    public static final String EXTRA_BOOK_TITLE =
+            QuotesActivity.class.getCanonicalName() + ".EXTRA_BOOK_TITLE";
+
+    private String mBookTitle;
     private RecyclerView mRecyclerView;
     private QuotesAdapter mQuotesAdapter;
 
@@ -24,9 +27,10 @@ public class QuotesActivity extends AppCompatActivity implements QuotesAdapter.L
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("Loading...");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mQuotesTag = "buddha";
+        mBookTitle = getIntent().getStringExtra(EXTRA_BOOK_TITLE);
+        getSupportActionBar().setTitle(mBookTitle);
 
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         mQuotesAdapter = new QuotesAdapter(new DataModel(this));
@@ -40,18 +44,18 @@ public class QuotesActivity extends AppCompatActivity implements QuotesAdapter.L
     @Override
     protected void onResume() {
         super.onResume();
-        mQuotesAdapter.loadItems(mQuotesTag);
+        mQuotesAdapter.loadItems(mBookTitle);
     }
 
     @Override
     public void onItemsLoaded() {
-        List<String> authors = mQuotesAdapter.getAuthors();
-        StringBuilder authorsBuilder = new StringBuilder();
-        for (String author : authors) {
-            authorsBuilder.append(author).append(", ");
-        }
-        String authorsString = authorsBuilder.toString();
-        authorsString = authorsString.substring(0, authorsString.length() - 2);
-        getSupportActionBar().setTitle(authorsString);
+//        List<String> authors = mQuotesAdapter.getAuthors();
+//        StringBuilder authorsBuilder = new StringBuilder();
+//        for (String author : authors) {
+//            authorsBuilder.append(author).append(", ");
+//        }
+//        String authorsString = authorsBuilder.toString();
+//        authorsString = authorsString.substring(0, authorsString.length() - 2);
+//        getSupportActionBar().setTitle(authorsString);
     }
 }

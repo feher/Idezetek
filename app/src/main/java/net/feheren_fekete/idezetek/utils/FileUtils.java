@@ -61,7 +61,7 @@ public class FileUtils {
         File destinationDir = destinationFile.getParentFile();
         if (!destinationDir.exists()) {
             if (!destinationDir.mkdirs()) {
-                Log.e(TAG, "Cannot create directory: " + destinationFile.getAbsolutePath());
+                Log.e(TAG, "Cannot create directory: " + destinationDir.getAbsolutePath());
                 return;
             }
         }

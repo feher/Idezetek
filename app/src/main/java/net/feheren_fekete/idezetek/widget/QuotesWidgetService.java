@@ -46,17 +46,24 @@ public class QuotesWidgetService extends Service {
 
     private static final class WidgetInfo {
         int widgetId;
-        String quotesTag;
+        String bookTitle;
         List<Quote> quotes;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+
         mDataModel = new DataModel(this);
         mPreferences = new QuotesPreferences(this);
         mAppWidgetManager = AppWidgetManager.getInstance(this);
         mWidgetInfos = new HashMap<>();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mDataModel.close();
     }
 
     @Override
@@ -93,9 +100,9 @@ public class QuotesWidgetService extends Service {
         if (mWidgetInfos.containsKey(widgetId)) {
             Log.d(TAG, "Updating widget " + widgetId);
             WidgetInfo widgetInfo = mWidgetInfos.get(widgetId);
-            String quotesTag = mPreferences.getWidgetQuotesTag(widgetId);
+            String bookTitle = mPreferences.getWidgetBookTitle(widgetId);
 
-            if (widgetInfo.quotesTag.equals(quotesTag)) {
+            if (widgetInfo.bookTitle.equals(bookTitle)) {
                 if (!widgetInfo.quotes.isEmpty()) {
                     int quoteIndex = mPreferences.getWidgetQuoteIndex(widgetId);
                     if (quoteIndex < 0 || quoteIndex >= widgetInfo.quotes.size()) {
@@ -123,6 +130,7 @@ public class QuotesWidgetService extends Service {
                     views.setTextViewText(R.id.quote_index, String.valueOf(quoteIndex + 1));
 
                     Intent openQuotesIntent = new Intent(this, QuotesActivity.class);
+                    openQuotesIntent.putExtra(QuotesActivity.EXTRA_BOOK_TITLE, widgetInfo.bookTitle);
                     PendingIntent openQuotesPendingIntent = PendingIntent.getActivity(this, 0, openQuotesIntent, PendingIntent.FLAG_CANCEL_CURRENT);
                     views.setOnClickPendingIntent(R.id.quote_content_layout, openQuotesPendingIntent);
 
@@ -142,7 +150,7 @@ public class QuotesWidgetService extends Service {
                 }
             } else {
                 Log.d(TAG, "Reloading quotes for widget " + widgetId);
-                widgetInfo.quotesTag = quotesTag;
+                widgetInfo.bookTitle = bookTitle;
                 widgetInfo.quotes.clear();
                 loadQuotesAndUpdateWidget(widgetInfo);
             }
@@ -150,11 +158,11 @@ public class QuotesWidgetService extends Service {
             Log.d(TAG, "Creating new widget " + widgetId);
             WidgetInfo widgetInfo = new WidgetInfo();
             widgetInfo.widgetId = widgetId;
-            widgetInfo.quotesTag = "buddha";
+            widgetInfo.bookTitle = "Buddha";
             widgetInfo.quotes = Collections.emptyList();
             mWidgetInfos.put(widgetId, widgetInfo);
 
-            mPreferences.setWidgetQuotesTag(widgetId, widgetInfo.quotesTag);
+            mPreferences.setWidgetBookTitle(widgetId, widgetInfo.bookTitle);
             mPreferences.setWidgetQuoteIndex(widgetId, 0);
             Date currentDate = Calendar.getInstance().getTime();
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -170,7 +178,7 @@ public class QuotesWidgetService extends Service {
         Task.callInBackground(new Callable<List<Quote>>() {
             @Override
             public List<Quote> call() {
-                return mDataModel.loadQuotes(widgetInfo.quotesTag);
+                return mDataModel.loadQuotes(widgetInfo.bookTitle);
             }
         }).continueWith(new Continuation<List<Quote>, Void>() {
             @Override

@@ -5,8 +5,8 @@ import android.content.SharedPreferences;
 
 public class QuotesPreferences {
 
-    private static final String WIDGET_QUOTES_TAG = "WidgetQuotesTag";
-    private static final String WIDGET_QUOTES_TAG_DEFAULT = "buddha";
+    private static final String WIDGET_BOOK_TITLE = "WidgetBookTitle";
+    private static final String WIDGET_BOOK_TITLE_DEFAULT = "Buddha";
 
     private static final String WIDGET_QUOTE_INDEX = "WidgetQuoteIndex";
     private static final int WIDGET_QUOTE_INDEX_DEFAULT = 0;
@@ -20,16 +20,16 @@ public class QuotesPreferences {
         mSharedPreferences = context.getSharedPreferences("QuotesPreferences", Context.MODE_PRIVATE);
     }
 
-    public String getWidgetQuotesTag(int widgetId) {
+    public String getWidgetBookTitle(int widgetId) {
         return mSharedPreferences.getString(
-                createWidgetPreferenceKey(WIDGET_QUOTES_TAG, widgetId),
-                WIDGET_QUOTES_TAG_DEFAULT);
+                createWidgetPreferenceKey(WIDGET_BOOK_TITLE, widgetId),
+                WIDGET_BOOK_TITLE_DEFAULT);
     }
 
-    public void setWidgetQuotesTag(int widgetId, String tag) {
+    public void setWidgetBookTitle(int widgetId, String bookTitle) {
         mSharedPreferences
                 .edit()
-                .putString(createWidgetPreferenceKey(WIDGET_QUOTES_TAG, widgetId), tag)
+                .putString(createWidgetPreferenceKey(WIDGET_BOOK_TITLE, widgetId), bookTitle)
                 .apply();
     }
 
@@ -62,7 +62,7 @@ public class QuotesPreferences {
     public void removeWidgetPreferences(int widgetId) {
         mSharedPreferences
                 .edit()
-                .remove(createWidgetPreferenceKey(WIDGET_QUOTES_TAG, widgetId))
+                .remove(createWidgetPreferenceKey(WIDGET_BOOK_TITLE, widgetId))
                 .remove(createWidgetPreferenceKey(WIDGET_QUOTE_INDEX, widgetId))
                 .remove(createWidgetPreferenceKey(WIDGET_DATE_OF_LAST_UPDATE, widgetId))
                 .apply();

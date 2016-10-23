@@ -30,7 +30,7 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
         public TextView quoteAuthor;
         public QuoteViewHolder(View view) {
             super(view);
-            quoteText = (TextView) view.findViewById(R.id.quote_text);
+            quoteText = (TextView) view.findViewById(R.id.book_title_text);
             quoteAuthor = (TextView) view.findViewById(R.id.quote_author);
         }
     }
@@ -50,13 +50,13 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
         mListener = listener;
     }
 
-    public void loadItems(final String tag) {
+    public void loadItems(final String bookTitle) {
         mAuthors.clear();
         Task.callInBackground(new Callable<List<Quote>>() {
             @Override
             public List<Quote> call() throws Exception {
                 mDataModel.initDefaultQuotes();
-                return mDataModel.loadQuotes(tag);
+                return mDataModel.loadQuotes(bookTitle);
             }
         }).continueWith(new Continuation<List<Quote>, Void>() {
             @Override

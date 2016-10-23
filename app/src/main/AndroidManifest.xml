@@ -26,6 +26,14 @@
                 android:value="net.feheren_fekete.idezetek.quotebooks.QuoteBooksActivity" />
         </activity>
 
+        <activity
+            android:name=".widget.QuotesWidgetConfigActivity"
+            android:theme="@style/QuotesWidgetConfigActivity">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+
         <service android:name=".widget.QuotesWidgetService"></service>
 
         <receiver android:name=".widget.QuotesWidgetProvider">

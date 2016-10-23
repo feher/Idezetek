@@ -30,7 +30,7 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
         public TextView quoteAuthor;
         public QuoteViewHolder(View view) {
             super(view);
-            quoteText = (TextView) view.findViewById(R.id.book_title_text);
+            quoteText = (TextView) view.findViewById(R.id.quote_text);
             quoteAuthor = (TextView) view.findViewById(R.id.quote_author);
         }
     }
@@ -52,23 +52,17 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
 
     public void loadItems(final String bookTitle) {
         mAuthors.clear();
-        Task.callInBackground(new Callable<List<Quote>>() {
-            @Override
-            public List<Quote> call() throws Exception {
-                mDataModel.initDefaultQuotes();
-                return mDataModel.loadQuotes(bookTitle);
+        Task.callInBackground(() -> {
+            mDataModel.initDefaultQuotes();
+            return mDataModel.loadQuotes(bookTitle);
+        }).continueWith((task) -> {
+            mQuotes = task.getResult();
+            mAuthors = extractAuthors(mQuotes);
+            notifyDataSetChanged();
+            if (mListener != null) {
+                mListener.onItemsLoaded();
             }
-        }).continueWith(new Continuation<List<Quote>, Void>() {
-            @Override
-            public Void then(Task<List<Quote>> task) throws Exception {
-                mQuotes = task.getResult();
-                mAuthors = extractAuthors(mQuotes);
-                notifyDataSetChanged();
-                if (mListener != null) {
-                    mListener.onItemsLoaded();
-                }
-                return null;
-            }
+            return null;
         }, Task.UI_THREAD_EXECUTOR);
     }
 

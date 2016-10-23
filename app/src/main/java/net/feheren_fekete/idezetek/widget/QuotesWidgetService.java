@@ -35,9 +35,11 @@ public class QuotesWidgetService extends Service {
     public static final String ACTION_REMOVE_WIDGETS = QuotesWidgetService.class.getCanonicalName() + ".ACTION_REMOVE_WIDGETS";
     public static final String EXTRA_WIDGET_IDS = QuotesWidgetService.class.getCanonicalName() + ".EXTRA_WIDGET_IDS";
 
+    public static final String ACTION_ADD_WIDGET = QuotesWidgetService.class.getCanonicalName() + ".ACTION_ADD_WIDGET";
     public static final String ACTION_SHOW_NEXT_QUOTE = QuotesWidgetService.class.getCanonicalName() + ".ACTION_SHOW_NEXT_QUOTE";
     public static final String ACTION_SHOW_PREVIOUS_QUOTE = QuotesWidgetService.class.getCanonicalName() + ".ACTION_SHOW_PREVIOUS_QUOTE";
     public static final String EXTRA_WIDGET_ID = QuotesWidgetService.class.getCanonicalName() + ".EXTRA_WIDGET_ID";
+    public static final String EXTRA_BOOK_TITLE = QuotesWidgetService.class.getCanonicalName() + ".EXTRA_BOOK_TITLE";
 
     private DataModel mDataModel;
     private QuotesPreferences mPreferences;
@@ -70,7 +72,9 @@ public class QuotesWidgetService extends Service {
     public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
         if (intent != null) {
             String action = intent.getAction();
-            if (ACTION_UPDATE_WIDGETS.equals(action)) {
+            if (ACTION_ADD_WIDGET.equals(action)) {
+                addWidget(intent);
+            } else if (ACTION_UPDATE_WIDGETS.equals(action)) {
                 updateWidgets(intent);
             } else if (ACTION_REMOVE_WIDGETS.equals(action)) {
                 removeWidgets(intent);
@@ -96,69 +100,14 @@ public class QuotesWidgetService extends Service {
         }
     }
 
-    private void updateWidget(int widgetId) {
-        if (mWidgetInfos.containsKey(widgetId)) {
-            Log.d(TAG, "Updating widget " + widgetId);
-            WidgetInfo widgetInfo = mWidgetInfos.get(widgetId);
-            String bookTitle = mPreferences.getWidgetBookTitle(widgetId);
-
-            if (widgetInfo.bookTitle.equals(bookTitle)) {
-                if (!widgetInfo.quotes.isEmpty()) {
-                    int quoteIndex = mPreferences.getWidgetQuoteIndex(widgetId);
-                    if (quoteIndex < 0 || quoteIndex >= widgetInfo.quotes.size()) {
-                        quoteIndex = 0;
-                    }
-
-                    String widgetDate = mPreferences.getWidgetDateOfLastUpdate(widgetId);
-                    Date currentDate = Calendar.getInstance().getTime();
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                    String currentDateString = dateFormat.format(currentDate);
-                    Log.d(TAG, "Date check: current " + currentDateString + " vs widget " + widgetDate);
-                    if (!currentDateString.equals(widgetDate)) {
-                        quoteIndex = quoteIndex + 1;
-                        if (quoteIndex >= widgetInfo.quotes.size()) {
-                            quoteIndex = 0;
-                        }
-                        mPreferences.setWidgetQuoteIndex(widgetId, quoteIndex);
-                        mPreferences.setWidgetDateOfLastUpdate(widgetId, currentDateString);
-                    }
-
-                    Quote quote = widgetInfo.quotes.get(quoteIndex);
-                    RemoteViews views = new RemoteViews(getPackageName(), R.layout.quotes_widget);
-                    views.setTextViewText(R.id.book_title_text, quote.getQuote());
-                    views.setTextViewText(R.id.quote_author, quote.getAuthor());
-                    views.setTextViewText(R.id.quote_index, String.valueOf(quoteIndex + 1));
-
-                    Intent openQuotesIntent = new Intent(this, QuotesActivity.class);
-                    openQuotesIntent.putExtra(QuotesActivity.EXTRA_BOOK_TITLE, widgetInfo.bookTitle);
-                    PendingIntent openQuotesPendingIntent = PendingIntent.getActivity(this, 0, openQuotesIntent, PendingIntent.FLAG_CANCEL_CURRENT);
-                    views.setOnClickPendingIntent(R.id.quote_content_layout, openQuotesPendingIntent);
-
-                    Intent prevQuoteIntent = new Intent(this, QuotesWidgetService.class);
-                    prevQuoteIntent.setAction(ACTION_SHOW_PREVIOUS_QUOTE);
-                    prevQuoteIntent.putExtra(EXTRA_WIDGET_ID, widgetId);
-                    PendingIntent prevQuotePendingIntent = PendingIntent.getService(this, 1, prevQuoteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
-                    views.setOnClickPendingIntent(R.id.prev_button, prevQuotePendingIntent);
-
-                    Intent nextQuoteIntent = new Intent(this, QuotesWidgetService.class);
-                    nextQuoteIntent.setAction(ACTION_SHOW_NEXT_QUOTE);
-                    nextQuoteIntent.putExtra(EXTRA_WIDGET_ID, widgetId);
-                    PendingIntent nextQuotePendingIntent = PendingIntent.getService(this, 2, nextQuoteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
-                    views.setOnClickPendingIntent(R.id.next_button, nextQuotePendingIntent);
-
-                    mAppWidgetManager.updateAppWidget(widgetId, views);
-                }
-            } else {
-                Log.d(TAG, "Reloading quotes for widget " + widgetId);
-                widgetInfo.bookTitle = bookTitle;
-                widgetInfo.quotes.clear();
-                loadQuotesAndUpdateWidget(widgetInfo);
-            }
-        } else {
+    private void addWidget(Intent intent) {
+        int widgetId = intent.getIntExtra(EXTRA_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+        String bookTitle = intent.getStringExtra(EXTRA_BOOK_TITLE).trim();
+        if (widgetId != AppWidgetManager.INVALID_APPWIDGET_ID && !bookTitle.isEmpty()) {
             Log.d(TAG, "Creating new widget " + widgetId);
             WidgetInfo widgetInfo = new WidgetInfo();
             widgetInfo.widgetId = widgetId;
-            widgetInfo.bookTitle = "Buddha";
+            widgetInfo.bookTitle = bookTitle;
             widgetInfo.quotes = Collections.emptyList();
             mWidgetInfos.put(widgetId, widgetInfo);
 
@@ -169,6 +118,72 @@ public class QuotesWidgetService extends Service {
             String currentDateString = dateFormat.format(currentDate);
             mPreferences.setWidgetDateOfLastUpdate(widgetId, currentDateString);
 
+            loadQuotesAndUpdateWidget(widgetInfo);
+        }
+    }
+
+    private void updateWidget(int widgetId) {
+        if (!mWidgetInfos.containsKey(widgetId)) {
+            return;
+        }
+
+        Log.d(TAG, "Updating widget " + widgetId);
+        WidgetInfo widgetInfo = mWidgetInfos.get(widgetId);
+        String bookTitle = mPreferences.getWidgetBookTitle(widgetId);
+
+        if (widgetInfo.bookTitle.equals(bookTitle)) {
+            if (!widgetInfo.quotes.isEmpty()) {
+                int quoteIndex = mPreferences.getWidgetQuoteIndex(widgetId);
+                if (quoteIndex < 0 || quoteIndex >= widgetInfo.quotes.size()) {
+                    quoteIndex = 0;
+                }
+
+                String widgetDate = mPreferences.getWidgetDateOfLastUpdate(widgetId);
+                Date currentDate = Calendar.getInstance().getTime();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                String currentDateString = dateFormat.format(currentDate);
+                Log.d(TAG, "Date check: current " + currentDateString + " vs widget " + widgetDate);
+                if (!currentDateString.equals(widgetDate)) {
+                    quoteIndex = quoteIndex + 1;
+                    if (quoteIndex >= widgetInfo.quotes.size()) {
+                        quoteIndex = 0;
+                    }
+                    mPreferences.setWidgetQuoteIndex(widgetId, quoteIndex);
+                    mPreferences.setWidgetDateOfLastUpdate(widgetId, currentDateString);
+                }
+
+                Quote quote = widgetInfo.quotes.get(quoteIndex);
+                RemoteViews views = new RemoteViews(getPackageName(), R.layout.quotes_widget);
+                views.setTextViewText(R.id.quote_text, quote.getQuote());
+                views.setTextViewText(R.id.quote_author, quote.getAuthor());
+                views.setTextViewText(R.id.quote_index, String.valueOf(quoteIndex + 1));
+
+                Intent openQuotesIntent = new Intent(this, QuotesActivity.class);
+                openQuotesIntent.putExtra(QuotesActivity.EXTRA_BOOK_TITLE, widgetInfo.bookTitle);
+                PendingIntent openQuotesPendingIntent = PendingIntent.getActivity(
+                        this, widgetId + 0, openQuotesIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+                views.setOnClickPendingIntent(R.id.quote_content_layout, openQuotesPendingIntent);
+
+                Intent prevQuoteIntent = new Intent(this, QuotesWidgetService.class);
+                prevQuoteIntent.setAction(ACTION_SHOW_PREVIOUS_QUOTE);
+                prevQuoteIntent.putExtra(EXTRA_WIDGET_ID, widgetId);
+                PendingIntent prevQuotePendingIntent = PendingIntent.getService(
+                        this, widgetId + 1, prevQuoteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+                views.setOnClickPendingIntent(R.id.prev_button, prevQuotePendingIntent);
+
+                Intent nextQuoteIntent = new Intent(this, QuotesWidgetService.class);
+                nextQuoteIntent.setAction(ACTION_SHOW_NEXT_QUOTE);
+                nextQuoteIntent.putExtra(EXTRA_WIDGET_ID, widgetId);
+                PendingIntent nextQuotePendingIntent = PendingIntent.getService(
+                        this, widgetId + 2, nextQuoteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+                views.setOnClickPendingIntent(R.id.next_button, nextQuotePendingIntent);
+
+                mAppWidgetManager.updateAppWidget(widgetId, views);
+            }
+        } else {
+            Log.d(TAG, "Reloading quotes for widget " + widgetId);
+            widgetInfo.bookTitle = bookTitle;
+            widgetInfo.quotes.clear();
             loadQuotesAndUpdateWidget(widgetInfo);
         }
     }

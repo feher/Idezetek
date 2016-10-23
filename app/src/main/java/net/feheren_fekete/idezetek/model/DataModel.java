@@ -142,6 +142,8 @@ public class DataModel {
             try {
                 inputStream = assetManager.open("buddha_quotes.txt");
                 importQuotes(inputStream, "Buddha");
+                inputStream = assetManager.open("i_quotes.txt");
+                importQuotes(inputStream, "I");
             } catch (IOException e) {
                 // TODO: Report error.
                 Log.e(TAG, "Cannot init default quotes", e);

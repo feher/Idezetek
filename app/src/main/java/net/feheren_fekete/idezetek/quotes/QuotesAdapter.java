@@ -1,12 +1,15 @@
-package net.feheren_fekete.idezetek;
+package net.feheren_fekete.idezetek.quotes;
 
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import net.feheren_fekete.idezetek.R;
 import net.feheren_fekete.idezetek.model.DataModel;
 import net.feheren_fekete.idezetek.model.Quote;
 
@@ -14,22 +17,23 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Callable;
 
-import bolts.Continuation;
 import bolts.Task;
 
 public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewHolder> {
 
     public interface Listener {
         void onItemsLoaded();
+        void onItemClicked(int position);
     }
 
     public class QuoteViewHolder extends RecyclerView.ViewHolder {
+        public LinearLayout layout;
         public TextView quoteText;
         public TextView quoteAuthor;
         public QuoteViewHolder(View view) {
             super(view);
+            layout = (LinearLayout) view.findViewById(R.id.root_layout);
             quoteText = (TextView) view.findViewById(R.id.quote_text);
             quoteAuthor = (TextView) view.findViewById(R.id.quote_author);
         }
@@ -39,11 +43,16 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
     private List<Quote> mQuotes;
     private List<String> mAuthors;
     private @Nullable Listener mListener;
+    private int mSelectedItemPosition;
+    private int mSelectedItemColor;
+    private int mNormalItemColor;
 
     public QuotesAdapter(DataModel dataModel) {
         mDataModel = dataModel;
         mQuotes = new ArrayList<>();
         mAuthors = new ArrayList<>();
+        mSelectedItemPosition = -1;
+        mSelectedItemColor = -1;
     }
 
     public void setListener(Listener listener) {
@@ -70,6 +79,11 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
         return mAuthors;
     }
 
+    public void setSelectedItem(int position) {
+        mSelectedItemPosition = Math.min(position, getItemCount() - 1);
+        mSelectedItemPosition = Math.max(0, mSelectedItemPosition);
+    }
+
     @Override
     public QuoteViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
@@ -80,12 +94,32 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
     @Override
     public void onBindViewHolder(QuoteViewHolder holder, int position) {
         Quote quote = mQuotes.get(position);
-        holder.quoteText.setText(quote.getQuote());
+
+        holder.quoteText.setText(Html.fromHtml(quote.getQuote()));
+
         if (mAuthors.size() == 1) {
             holder.quoteAuthor.setVisibility(View.GONE);
         } else {
             holder.quoteAuthor.setText(quote.getAuthor());
         }
+
+        if (position == mSelectedItemPosition) {
+            if (mSelectedItemColor == -1) {
+                mSelectedItemColor = holder.layout.getContext().getResources().getColor(R.color.quotes_activity_selected_quote_background);
+            }
+            holder.layout.setBackgroundColor(mSelectedItemColor);
+        } else {
+            if (mNormalItemColor == -1) {
+                mNormalItemColor = holder.layout.getContext().getResources().getColor(R.color.quotes_activity_normal_quote_background);
+            }
+            holder.layout.setBackgroundColor(mNormalItemColor);
+        }
+
+        holder.layout.setOnClickListener(view -> {
+            if (mListener != null) {
+                mListener.onItemClicked(position);
+            }
+        });
     }
 
     @Override

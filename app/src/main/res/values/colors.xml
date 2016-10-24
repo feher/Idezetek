@@ -5,4 +5,6 @@
     <color name="colorAccent">#FF4081</color>
     <color name="widget_background">#77000000</color>
     <color name="widget_controls">#ff999999</color>
+    <color name="quotes_activity_normal_quote_background">@android:color/background_light</color>
+    <color name="quotes_activity_selected_quote_background">#FFCCCCCC</color>
 </resources>

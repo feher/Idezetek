@@ -4,11 +4,11 @@
     android:id="@+id/widget_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/widget_background">
+    android:background="@drawable/quotes_widget_background">
 
     <RelativeLayout
         android:id="@+id/quote_content_layout"
-        android:padding="10dp"
+        android:padding="15dp"
         android:layout_gravity="center"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -26,7 +26,7 @@
 
         <TextView
             android:id="@+id/quote_author"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="20dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="12sp"
@@ -39,6 +39,7 @@
 
     <ImageView
         android:id="@+id/prev_button"
+        android:visibility="gone"
         android:tint="@color/widget_controls"
         android:src="@drawable/ic_navigate_before"
         android:scaleType="center"
@@ -52,6 +53,7 @@
 
     <ImageView
         android:id="@+id/next_button"
+        android:visibility="gone"
         android:tint="@color/widget_controls"
         android:src="@drawable/ic_navigate_next"
         android:scaleType="center"
@@ -65,6 +67,7 @@
 
     <TextView
         android:id="@+id/quote_index"
+        android:visibility="gone"
         android:layout_width="wrap_content"
         android:layout_height="52dp"
         android:gravity="center"

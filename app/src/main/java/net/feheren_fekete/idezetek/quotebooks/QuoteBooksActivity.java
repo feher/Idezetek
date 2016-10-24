@@ -1,6 +1,7 @@
 package net.feheren_fekete.idezetek.quotebooks;
 
 import android.app.Activity;
+import android.appwidget.AppWidgetManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
@@ -18,7 +19,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import net.feheren_fekete.idezetek.QuotesActivity;
+import net.feheren_fekete.idezetek.quotes.QuotesActivity;
+import net.feheren_fekete.idezetek.QuotesPreferences;
 import net.feheren_fekete.idezetek.R;
 import net.feheren_fekete.idezetek.model.Book;
 import net.feheren_fekete.idezetek.model.DataModel;
@@ -32,13 +34,22 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
 
     private static final String TAG = QuoteBooksActivity.class.getSimpleName();
 
-    private static final int PICK_FILE_REQUEST_CODE = 1;
+    public static final String ACTION_SET_WIDGET_QUOTE =
+            QuoteBooksActivity.class.getCanonicalName() + ".ACTION_SET_WIDGET_QUOTE";
 
+    public static final String EXTRA_WIDGET_ID =
+            QuoteBooksActivity.class.getCanonicalName() + ".EXTRA_WIDGET_ID";
+
+    private static final int REQUEST_CODE_PICK_FILE = 1;
+    private static final int REQUEST_CODE_SET_WIDGET_QUOTE = 2;
+
+    private String mIntentAction;
+    private int mWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
+    private Handler mHandler = new Handler();
     private RecyclerView mRecyclerView;
     private DataModel mDataModel;
     private QuoteBooksAdapter mQuoteBooksAdapter;
     private FloatingActionButton mFloatingActionButton;
-    private Handler mHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,13 +71,21 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
 
         mFloatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
         mFloatingActionButton.setOnClickListener(mFabClickListener);
+
+        mIntentAction = getIntent().getAction();
+        if (ACTION_SET_WIDGET_QUOTE.equals(mIntentAction)) {
+            mWidgetId = getIntent().getIntExtra(EXTRA_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+            QuotesPreferences preferences = new QuotesPreferences(this);
+            String widgetBookTitle = preferences.getWidgetBookTitle(mWidgetId);
+            startQuotesActivityForResult(widgetBookTitle);
+        }
     }
 
     private View.OnClickListener mFabClickListener = view -> {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.setType("text/*");
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        startActivityForResult(intent, PICK_FILE_REQUEST_CODE);
+        startActivityForResult(intent, REQUEST_CODE_PICK_FILE);
         Toast.makeText(this, R.string.import_toast_pick_book, Toast.LENGTH_SHORT);
     };
 
@@ -74,18 +93,36 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
     protected void onResume() {
         super.onResume();
         mQuoteBooksAdapter.loadItems();
+        mFloatingActionButton.setVisibility(ACTION_SET_WIDGET_QUOTE.equals(mIntentAction) ? View.GONE : View.VISIBLE);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        mIntentAction = getIntent().getAction();
+        if (ACTION_SET_WIDGET_QUOTE.equals(mIntentAction)) {
+            mWidgetId = getIntent().getIntExtra(EXTRA_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+            QuotesPreferences preferences = new QuotesPreferences(this);
+            String widgetBookTitle = preferences.getWidgetBookTitle(mWidgetId);
+            startQuotesActivityForResult(widgetBookTitle);
+        }
     }
 
     @Override
     public void onItemsLoaded() {
-
+        // Nothing.
     }
 
     @Override
     public void onItemClicked(Book book) {
-        Intent intent = new Intent(this, QuotesActivity.class);
-        intent.putExtra(QuotesActivity.EXTRA_BOOK_TITLE, book.getTitle());
-        startActivity(intent);
+        if (ACTION_SET_WIDGET_QUOTE.equals(mIntentAction)) {
+            startQuotesActivityForResult(book.getTitle());
+        } else {
+            Intent intent = new Intent(this, QuotesActivity.class);
+            intent.putExtra(QuotesActivity.EXTRA_BOOK_TITLE, book.getTitle());
+            startActivity(intent);
+        }
     }
 
     @Override
@@ -107,13 +144,17 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == PICK_FILE_REQUEST_CODE) {
+        if (requestCode == REQUEST_CODE_PICK_FILE) {
             if (resultCode == Activity.RESULT_OK) {
                 Uri bookUri = null;
                 if (data != null) {
                     bookUri = data.getData();
                     askTitleAndImport(bookUri);
                 }
+            }
+        } else if (requestCode == REQUEST_CODE_SET_WIDGET_QUOTE) {
+            if (resultCode == Activity.RESULT_OK) {
+                finish();
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
@@ -203,5 +244,18 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
         });
         builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel());
         builder.create().show();
+    }
+
+    private void startQuotesActivityForResult(String bookTitle) {
+        if (mWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+            Intent intent = new Intent(this, QuotesActivity.class);
+            intent.setAction(QuotesActivity.ACTION_SET_WIDGET_QUOTE);
+            intent.putExtra(QuotesActivity.EXTRA_BOOK_TITLE, bookTitle);
+            intent.putExtra(QuotesActivity.EXTRA_WIDGET_ID, mWidgetId);
+            startActivityForResult(intent, REQUEST_CODE_SET_WIDGET_QUOTE);
+        } else {
+            // TODO: Report error.
+            throw new RuntimeException("Widget ID is invalid");
+        }
     }
 }

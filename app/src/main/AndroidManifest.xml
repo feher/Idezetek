@@ -10,7 +10,8 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name=".quotebooks.QuoteBooksActivity">
+            android:name=".quotebooks.QuoteBooksActivity"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -18,7 +19,7 @@
         </activity>
 
         <activity
-            android:name=".QuotesActivity"
+            android:name=".quotes.QuotesActivity"
             android:parentActivityName=".quotebooks.QuoteBooksActivity">
             <!-- Parent activity meta-data to support 4.0 and lower -->
             <meta-data

@@ -37,4 +37,5 @@ dependencies {
     compile 'com.android.support:design:25.0.0'
     compile 'com.parse.bolts:bolts-tasks:1.4.0'
     compile 'org.greenrobot:eventbus:3.0.0'
+    compile 'com.android.support.constraint:constraint-layout:1.0.0-beta1'
 }

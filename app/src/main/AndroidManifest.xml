@@ -11,7 +11,7 @@
 
         <activity
             android:name=".quotebooks.QuoteBooksActivity"
-            android:launchMode="singleTop">
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -20,11 +20,22 @@
 
         <activity
             android:name=".quotes.QuotesActivity"
+            android:launchMode="singleTask"
             android:parentActivityName=".quotebooks.QuoteBooksActivity">
             <!-- Parent activity meta-data to support 4.0 and lower -->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="net.feheren_fekete.idezetek.quotebooks.QuoteBooksActivity" />
+        </activity>
+
+        <activity
+            android:name=".quoteeditor.QuoteEditor"
+            android:launchMode="singleTask"
+            android:parentActivityName=".quotes.QuotesActivity">
+            <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="net.feheren_fekete.idezetek.quotes.QuotesActivity" />
         </activity>
 
         <activity
@@ -35,7 +46,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".widget.QuotesWidgetService"></service>
+        <service android:name=".widget.QuotesWidgetService"/>
 
         <receiver android:name=".widget.QuotesWidgetProvider">
             <intent-filter>

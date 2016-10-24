@@ -159,6 +159,10 @@ public class DataModel {
         }
     }
 
+    public void updateQuotes(String bookTitle, List<Quote> quotes) {
+        // TODO
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onBooksChangedEvent(DataModel.BooksChangedEvent event) {
         if (event.sender != this) {

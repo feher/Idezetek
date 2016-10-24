@@ -12,4 +12,9 @@
     </string-array>
     <string name="book_delete_dialog_title">Delete book</string>
     <string name="book_delete_dialog_message">Are you sure you want to delete \"%1$s\"?</string>
+    <string-array name="quote_context_menu_items">
+        <item>Show in widget</item>
+        <item>Edit</item>
+    </string-array>
+    <string name="quote_editor_activity_title">Edit quote</string>
 </resources>

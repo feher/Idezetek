@@ -138,7 +138,7 @@ public class QuotesWidgetService extends Service {
             mWidgetInfos.put(widgetId, widgetInfo);
 
             mPreferences.setWidgetBookTitle(widgetId, widgetInfo.bookTitle);
-            mPreferences.setWidgetQuoteIndex(widgetId, 200);
+            mPreferences.setWidgetQuoteIndex(widgetId, 1);
             Date currentDate = Calendar.getInstance().getTime();
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             String currentDateString = dateFormat.format(currentDate);

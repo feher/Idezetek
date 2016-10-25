@@ -25,10 +25,23 @@ import java.util.List;
 
 public class DataModel {
 
+    public interface Listener {
+        void onQuotesChanged(String bookTitle);
+    }
+
     private static final class BooksChangedEvent {
         public final DataModel sender;
         public BooksChangedEvent(DataModel sender) {
             this.sender = sender;
+        }
+    }
+
+    private static final class QuotesChangedEvent {
+        public final DataModel sender;
+        public final String bookTitle;
+        public QuotesChangedEvent(DataModel sender, String bookTitle) {
+            this.sender = sender;
+            this.bookTitle = bookTitle;
         }
     }
 
@@ -41,6 +54,7 @@ public class DataModel {
     private Context mContext;
     private String mQuotesDirPath;
     private @Nullable List<Book> mBooks;
+    private @Nullable Listener mListener;
 
     public DataModel(Context context) {
         mContext = context;
@@ -51,6 +65,10 @@ public class DataModel {
 
     public void close() {
         EventBus.getDefault().unregister(this);
+    }
+
+    public void setListener(Listener listener) {
+        mListener = listener;
     }
 
     public List<Book> loadBooks() {
@@ -159,14 +177,55 @@ public class DataModel {
         }
     }
 
-    public void updateQuotes(String bookTitle, List<Quote> quotes) {
-        // TODO
+    public boolean updateQuotes(String bookTitle, List<Quote> quotes) {
+        synchronized (this) {
+            boolean result = false;
+
+            Book book = getBookByTitle(bookTitle);
+            if (book == null) {
+                return false;
+            }
+
+            BufferedWriter writer = null;
+            try {
+                writer = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream(mQuotesDirPath + File.separator + book.getFileName())));
+                for (Quote quote : quotes) {
+                    writer.write(quote.getAuthor() + ":" + quote.getQuote() + "\n");
+                }
+                result = true;
+            } catch (IOException e) {
+                // TODO: Report error.
+                Log.e(TAG, "Cannot write quotes to file", e);
+            } finally {
+                if (writer != null) {
+                    try {
+                        writer.close();
+                    } catch (IOException e) {
+                        // Ignore.
+                    }
+                }
+            }
+
+            EventBus.getDefault().post(new QuotesChangedEvent(this, bookTitle));
+
+            return result;
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onBooksChangedEvent(DataModel.BooksChangedEvent event) {
         if (event.sender != this) {
             mBooks = reloadBooks();
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onQuotesChangedEvent(DataModel.QuotesChangedEvent event) {
+        if (event.sender != this) {
+            if (mListener != null) {
+                mListener.onQuotesChanged(event.bookTitle);
+            }
         }
     }
 

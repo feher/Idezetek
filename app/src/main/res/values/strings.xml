@@ -17,4 +17,9 @@
         <item>Edit</item>
     </string-array>
     <string name="quote_editor_activity_title">Edit quote</string>
+    <string name="quote_editor_done">Done</string>
+    <string name="quote_editor_author">Author</string>
+    <string name="quote_editor_author_hint">Name</string>
+    <string name="quote_editor_quote">Quote</string>
+    <string name="quote_editor_quote_hint">Write the quote here</string>
 </resources>

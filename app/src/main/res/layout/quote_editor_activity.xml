@@ -31,36 +31,44 @@
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin">
 
-        <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:inputType="textPersonName"
-            android:text="Name"
-            android:ems="10"
-            android:layout_alignParentTop="true"
-            android:layout_toEndOf="@+id/author_text_view"
-            android:layout_marginStart="14dp"
-            android:id="@+id/quote_author" />
-
         <TextView
-            android:text="Author"
+            android:text="@string/quote_editor_author"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/author_text_view"
-            android:layout_alignBaseline="@+id/quote_author"
-            android:layout_alignBottom="@+id/quote_author"
+            android:layout_alignParentTop="true"
             android:layout_alignParentStart="true" />
 
         <EditText
+            android:id="@+id/quote_author"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:hint="@string/quote_editor_author_hint"
+            android:ems="10"
+            android:layout_below="@+id/author_text_view"
+            android:layout_alignParentStart="true" />
+
+        <TextView
+            android:id="@+id/quote_text_view"
+            android:text="@string/quote_editor_quote"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/quote_author"
+            android:layout_marginTop="10dp"
+            android:layout_alignParentStart="true" />
+
+        <EditText
+            android:id="@+id/quote_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textMultiLine"
             android:ems="10"
             android:layout_alignParentStart="true"
-            android:id="@+id/quote_text"
             android:layout_alignParentBottom="true"
-            android:hint="Write the quote here"
-            android:layout_below="@+id/quote_author" />
+            android:hint="@string/quote_editor_quote_hint"
+            android:gravity="top"
+            android:layout_below="@+id/quote_text_view" />
     </RelativeLayout>
 
 </android.support.design.widget.CoordinatorLayout>

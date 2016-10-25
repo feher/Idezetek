@@ -54,7 +54,7 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_quote_books);
+        setContentView(R.layout.quote_books_activity);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);

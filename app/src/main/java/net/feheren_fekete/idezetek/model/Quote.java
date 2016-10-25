@@ -13,7 +13,15 @@ public class Quote {
         return mAuthor;
     }
 
+    public void setAuthor(String author) {
+        mAuthor = author;
+    }
+
     public String getQuote() {
         return mQuote;
+    }
+
+    public void setQuote(String quote) {
+        mQuote = quote;
     }
 }

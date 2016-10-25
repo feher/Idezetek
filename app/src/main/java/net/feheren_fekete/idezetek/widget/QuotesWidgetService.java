@@ -29,10 +29,11 @@ import java.util.Map;
 
 import bolts.Task;
 
-public class QuotesWidgetService extends Service {
+public class QuotesWidgetService extends Service implements DataModel.Listener {
 
     private static final String TAG = QuotesWidgetService.class.getSimpleName();
 
+    public static final String ACTION_UPDATE_ALL_WIDGETS = QuotesWidgetService.class.getCanonicalName() + ".ACTION_UPDATE_ALL_WIDGETS";
     public static final String ACTION_UPDATE_WIDGETS = QuotesWidgetService.class.getCanonicalName() + ".ACTION_UPDATE_WIDGETS";
     public static final String ACTION_REMOVE_WIDGETS = QuotesWidgetService.class.getCanonicalName() + ".ACTION_REMOVE_WIDGETS";
     public static final String EXTRA_WIDGET_IDS = QuotesWidgetService.class.getCanonicalName() + ".EXTRA_WIDGET_IDS";
@@ -78,6 +79,7 @@ public class QuotesWidgetService extends Service {
 
         mCalendar = Calendar.getInstance();
         mDataModel = new DataModel(this);
+        mDataModel.setListener(this);
         mPreferences = new QuotesPreferences(this);
         mAppWidgetManager = AppWidgetManager.getInstance(this);
         mWidgetInfos = new HashMap<>();
@@ -101,6 +103,8 @@ public class QuotesWidgetService extends Service {
             String action = intent.getAction();
             if (ACTION_ADD_WIDGET.equals(action)) {
                 addWidget(intent);
+            } else if (ACTION_UPDATE_ALL_WIDGETS.equals(action)) {
+                updateAllWidgets();
             } else if (ACTION_UPDATE_WIDGETS.equals(action)) {
                 updateWidgets(intent);
             } else if (ACTION_REMOVE_WIDGETS.equals(action)) {
@@ -120,6 +124,23 @@ public class QuotesWidgetService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    public void onQuotesChanged(String bookTitle) {
+        for (WidgetInfo widgetInfo : mWidgetInfos.values()) {
+            if (widgetInfo.bookTitle.equals(bookTitle)) {
+                widgetInfo.clearQuotes();
+            }
+        }
+        updateAllWidgets();
+    }
+
+    private void updateAllWidgets() {
+        int[] widgetIds = mAppWidgetManager.getAppWidgetIds(new ComponentName(this, QuotesWidgetProvider.class));
+        Intent intent = new Intent();
+        intent.putExtra(EXTRA_WIDGET_IDS, widgetIds);
+        updateWidgets(intent);
     }
 
     private void updateWidgets(Intent intent) {

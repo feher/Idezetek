@@ -20,7 +20,8 @@ import net.feheren_fekete.idezetek.model.DataModel;
 import net.feheren_fekete.idezetek.quoteeditor.QuoteEditor;
 import net.feheren_fekete.idezetek.widget.QuotesWidgetService;
 
-public class QuotesActivity extends AppCompatActivity implements QuotesAdapter.Listener {
+public class QuotesActivity extends AppCompatActivity
+        implements QuotesAdapter.Listener, DataModel.Listener {
 
     private static final String TAG = QuotesActivity.class.getSimpleName();
 
@@ -49,7 +50,7 @@ public class QuotesActivity extends AppCompatActivity implements QuotesAdapter.L
 
         initFromIntent(getIntent());
 
-        setContentView(R.layout.activity_quotes);
+        setContentView(R.layout.quotes_activity);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -57,7 +58,9 @@ public class QuotesActivity extends AppCompatActivity implements QuotesAdapter.L
         getSupportActionBar().setTitle(mBookTitle);
 
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        mQuotesAdapter = new QuotesAdapter(new DataModel(this));
+        DataModel dataModel = new DataModel(this);
+        dataModel.setListener(this);
+        mQuotesAdapter = new QuotesAdapter(dataModel);
         mQuotesAdapter.setListener(this);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -93,6 +96,13 @@ public class QuotesActivity extends AppCompatActivity implements QuotesAdapter.L
             }
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onQuotesChanged(String bookTitle) {
+        if (mBookTitle.equals(bookTitle)) {
+            mQuotesAdapter.loadItems(bookTitle);
+        }
     }
 
     @Override

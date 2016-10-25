@@ -6,8 +6,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import net.feheren_fekete.idezetek.R;
 import net.feheren_fekete.idezetek.model.DataModel;
@@ -39,12 +42,13 @@ public class QuoteEditor extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_quote_editor);
+        setContentView(R.layout.quote_editor_activity);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle(R.string.quote_editor_activity_title);
+        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_close);
 
         mDataModel = new DataModel(this);
         mQuoteAuthorEditText = (EditText) findViewById(R.id.quote_author);
@@ -73,11 +77,24 @@ public class QuoteEditor extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.quote_editor_menu, menu);
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            // Respond to the action bar's Up/Home button
             case android.R.id.home: {
+                // Respond to the action bar's Up/Home button
                 finish();
+                return true;
+            }
+            case R.id.action_done: {
+                if (saveQuote()) {
+                    finish();
+                }
                 return true;
             }
         }
@@ -103,8 +120,30 @@ public class QuoteEditor extends AppCompatActivity {
         }
     }
 
-    private void saveQuote() {
-        // TODO
+    private boolean saveQuote() {
+        String quoteAuthor = mQuoteAuthorEditText.getText().toString().trim();
+        String quoteText = mQuoteEditText.getText().toString().trim();
+        if (quoteAuthor.isEmpty()) {
+            Toast.makeText(this, "Author cannot be empty", Toast.LENGTH_SHORT).show();
+            return false;
+        } else if (quoteText.isEmpty()) {
+            Toast.makeText(this, "Quote cannot be empty", Toast.LENGTH_SHORT).show();
+            return false;
+        } else {
+            Quote quote = mQuotes.get(mQuoteIndex);
+            quote.setAuthor(quoteAuthor);
+            quote.setQuote(quoteText);
+            Task.callInBackground(() -> {
+                return mDataModel.updateQuotes(mBookTitle, mQuotes);
+            }).continueWith((task) -> {
+                boolean isOk = task.getResult();
+                if (!isOk) {
+                    Toast.makeText(this, "Cannot save quote", Toast.LENGTH_SHORT).show();
+                }
+                return null;
+            }, Task.UI_THREAD_EXECUTOR);
+            return true;
+        }
     }
 
 }

@@ -27,7 +27,7 @@ public class QuotesWidgetConfigActivity extends AppCompatActivity implements Quo
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_quotes_widget_config);
+        setContentView(R.layout.quotes_widget_config_activity);
 
         setTitle(R.string.quote_books_activity_title);
 

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorPrimary">#607d8b</color>
+    <color name="colorPrimaryDark">#455a64</color>
+    <color name="colorAccent">#ba917d</color>
     <color name="widget_background">#77000000</color>
     <color name="widget_controls">#ff999999</color>
     <color name="quotes_activity_normal_quote_background">@android:color/background_light</color>

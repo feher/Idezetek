@@ -33,7 +33,7 @@ import java.util.Map;
 
 import bolts.Task;
 
-public class QuotesWidgetService extends Service implements DataModel.Listener {
+public class QuotesWidgetService extends Service implements DataModel.Listener, SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String TAG = QuotesWidgetService.class.getSimpleName();
 
@@ -87,6 +87,7 @@ public class QuotesWidgetService extends Service implements DataModel.Listener {
         mDataModel.setListener(this);
         mQuotesPreferences = new QuotesPreferences(this);
         mAppPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mAppPreferences.registerOnSharedPreferenceChangeListener(this);
         mAppWidgetManager = AppWidgetManager.getInstance(this);
         mWidgetInfos = new HashMap<>();
 
@@ -101,6 +102,7 @@ public class QuotesWidgetService extends Service implements DataModel.Listener {
     public void onDestroy() {
         super.onDestroy();
         mDataModel.close();
+        mAppPreferences.unregisterOnSharedPreferenceChangeListener(this);
     }
 
     @Override
@@ -130,6 +132,11 @@ public class QuotesWidgetService extends Service implements DataModel.Listener {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        updateAllWidgets();
     }
 
     @Override
@@ -237,15 +244,15 @@ public class QuotesWidgetService extends Service implements DataModel.Listener {
 
                     Intent prevQuoteIntent = new Intent(this, QuotesWidgetService.class);
                     prevQuoteIntent.setAction(QuotesWidgetService.ACTION_SHOW_PREVIOUS_QUOTE);
-                    prevQuoteIntent.putExtra(QuoteBooksActivity.EXTRA_WIDGET_ID, widgetId);
-                    PendingIntent prevQuotePendingIntent = PendingIntent.getActivity(
+                    prevQuoteIntent.putExtra(QuotesWidgetService.EXTRA_WIDGET_ID, widgetId);
+                    PendingIntent prevQuotePendingIntent = PendingIntent.getService(
                             this, widgetId + 1, prevQuoteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
                     views.setOnClickPendingIntent(R.id.prev_button, prevQuotePendingIntent);
 
                     Intent nextQuoteIntent = new Intent(this, QuotesWidgetService.class);
                     nextQuoteIntent.setAction(QuotesWidgetService.ACTION_SHOW_NEXT_QUOTE);
-                    nextQuoteIntent.putExtra(QuoteBooksActivity.EXTRA_WIDGET_ID, widgetId);
-                    PendingIntent nextQuotePendingIntent = PendingIntent.getActivity(
+                    nextQuoteIntent.putExtra(QuotesWidgetService.EXTRA_WIDGET_ID, widgetId);
+                    PendingIntent nextQuotePendingIntent = PendingIntent.getService(
                             this, widgetId + 2, nextQuoteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
                     views.setOnClickPendingIntent(R.id.next_button, nextQuotePendingIntent);
                 } else {

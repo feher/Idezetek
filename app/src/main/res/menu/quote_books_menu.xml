@@ -11,6 +11,11 @@
         android:title="@string/quote_books_add_action"
         app:showAsAction="never"/>
     <item
+        android:id="@+id/action_share"
+        android:icon="@drawable/ic_share"
+        android:title="@string/quote_books_share_action"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/action_settigs"
         android:icon="@drawable/ic_settings"
         android:title="@string/quote_books_settings_action"

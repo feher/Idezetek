@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Idezetek</string>
     <string name="quote_books_activity_title">Quote books</string>
+    <string name="quote_books_import_action">Import</string>
+    <string name="quote_books_add_action">Create new</string>
     <string name="import_dialog_book_title">Book title</string>
     <string name="import_toast_pick_book">Pick a book to import</string>
     <string name="title_exists">A book with this title already exists</string>

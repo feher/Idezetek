@@ -97,8 +97,10 @@ public class QuoteEditor extends AppCompatActivity {
                 }
                 return true;
             }
+            default: {
+                return super.onOptionsItemSelected(item);
+            }
         }
-        return super.onOptionsItemSelected(item);
     }
 
 

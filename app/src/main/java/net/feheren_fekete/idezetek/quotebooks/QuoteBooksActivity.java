@@ -15,6 +15,9 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -49,7 +52,6 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
     private RecyclerView mRecyclerView;
     private DataModel mDataModel;
     private QuoteBooksAdapter mQuoteBooksAdapter;
-    private FloatingActionButton mFloatingActionButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,9 +71,6 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mRecyclerView.setAdapter(mQuoteBooksAdapter);
 
-        mFloatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
-        mFloatingActionButton.setOnClickListener(mFabClickListener);
-
         mIntentAction = getIntent().getAction();
         if (ACTION_SET_WIDGET_QUOTE.equals(mIntentAction)) {
             mWidgetId = getIntent().getIntExtra(EXTRA_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
@@ -81,19 +80,10 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
         }
     }
 
-    private View.OnClickListener mFabClickListener = view -> {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.setType("text/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        startActivityForResult(intent, REQUEST_CODE_PICK_FILE);
-        Toast.makeText(this, R.string.import_toast_pick_book, Toast.LENGTH_SHORT);
-    };
-
     @Override
     protected void onResume() {
         super.onResume();
         mQuoteBooksAdapter.loadItems();
-        mFloatingActionButton.setVisibility(ACTION_SET_WIDGET_QUOTE.equals(mIntentAction) ? View.GONE : View.VISIBLE);
     }
 
     @Override
@@ -106,6 +96,26 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
             QuotesPreferences preferences = new QuotesPreferences(this);
             String widgetBookTitle = preferences.getWidgetBookTitle(mWidgetId);
             startQuotesActivityForResult(widgetBookTitle);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.quote_books_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_import: {
+                importBook();
+                return true;
+            }
+            default: {
+                return super.onOptionsItemSelected(item);
+            }
         }
     }
 
@@ -159,6 +169,14 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    private void importBook() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.setType("text/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(intent, REQUEST_CODE_PICK_FILE);
+        Toast.makeText(this, R.string.import_toast_pick_book, Toast.LENGTH_SHORT).show();
     }
 
     private void renameBook(Book book) {

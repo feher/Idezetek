@@ -25,6 +25,7 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
     public interface Listener {
         void onItemsLoaded();
         void onItemClicked(int position);
+        void onItemLongClicked(int position);
     }
 
     public class QuoteViewHolder extends RecyclerView.ViewHolder {
@@ -75,6 +76,10 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
         }, Task.UI_THREAD_EXECUTOR);
     }
 
+    public Quote getQuote(int position) {
+        return mQuotes.get(position);
+    }
+
     public List<String> getAuthors() {
         return mAuthors;
     }
@@ -119,6 +124,13 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
             if (mListener != null) {
                 mListener.onItemClicked(position);
             }
+        });
+
+        holder.layout.setOnLongClickListener(view -> {
+            if (mListener != null) {
+                mListener.onItemLongClicked(position);
+            }
+            return true;
         });
     }
 

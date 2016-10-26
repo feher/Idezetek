@@ -5,7 +5,6 @@ import android.appwidget.AppWidgetManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -18,7 +17,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -27,6 +25,7 @@ import net.feheren_fekete.idezetek.QuotesPreferences;
 import net.feheren_fekete.idezetek.R;
 import net.feheren_fekete.idezetek.model.Book;
 import net.feheren_fekete.idezetek.model.DataModel;
+import net.feheren_fekete.idezetek.utils.UiUtils;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -113,6 +112,10 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
                 importBook();
                 return true;
             }
+            case R.id.action_add: {
+                createBook();
+                return true;
+            }
             default: {
                 return super.onOptionsItemSelected(item);
             }
@@ -139,7 +142,7 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
     public void onItemLongClicked(Book book) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(book.getTitle());
-        builder.setItems(R.array.quote_book_context_menu_items, (dialogInterface, i) -> {
+        builder.setItems(R.array.quote_books_context_menu, (dialogInterface, i) -> {
             switch (i) {
                 case 0:
                     renameBook(book);
@@ -176,7 +179,12 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
         intent.setType("text/*");
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         startActivityForResult(intent, REQUEST_CODE_PICK_FILE);
-        Toast.makeText(this, R.string.import_toast_pick_book, Toast.LENGTH_SHORT).show();
+        UiUtils.showToastAtCenter(this, R.string.import_toast_pick_book, Toast.LENGTH_SHORT);
+    }
+
+    private void createBook() {
+        // TODO
+        Toast.makeText(this, R.string.toast_feature_not_implemented, Toast.LENGTH_SHORT).show();
     }
 
     private void renameBook(Book book) {
@@ -185,15 +193,15 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
         input.setText(book.getTitle());
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.import_dialog_book_title);
+        builder.setTitle(R.string.import_dialog_title);
         builder.setView(input);
         builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
             String newTitle = input.getText().toString().trim();
             if (mDataModel.doesBookExist(newTitle)) {
-                Toast.makeText(this, R.string.title_exists, Toast.LENGTH_SHORT).show();
+                UiUtils.showToastAtCenter(this, R.string.title_exists, Toast.LENGTH_SHORT);
                 mHandler.post(() -> renameBook(book));
             } else if (newTitle.isEmpty()) {
-                Toast.makeText(this, R.string.title_invalid, Toast.LENGTH_SHORT).show();
+                UiUtils.showToastAtCenter(this, R.string.title_invalid, Toast.LENGTH_SHORT);
                 mHandler.post(() -> renameBook(book));
             } else {
                 book.setTitle(newTitle);
@@ -233,15 +241,15 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
         input.setInputType(InputType.TYPE_CLASS_TEXT);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.import_dialog_book_title);
+        builder.setTitle(R.string.import_dialog_title);
         builder.setView(input);
         builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
             String title = input.getText().toString().trim();
             if (mDataModel.doesBookExist(title)) {
-                Toast.makeText(this, R.string.title_exists, Toast.LENGTH_SHORT).show();
+                UiUtils.showToastAtCenter(this, R.string.title_exists, Toast.LENGTH_SHORT);
                 mHandler.post(() -> askTitleAndImport(bookUri));
             } else if (title.isEmpty()) {
-                Toast.makeText(this, R.string.title_invalid, Toast.LENGTH_SHORT).show();
+                UiUtils.showToastAtCenter(this, R.string.title_invalid, Toast.LENGTH_SHORT);
                 mHandler.post(() -> askTitleAndImport(bookUri));
             } else {
                 try {

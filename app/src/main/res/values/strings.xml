@@ -1,22 +1,27 @@
 <resources>
     <string name="app_name">Idezetek</string>
+    <string name="toast_feature_not_implemented">This feature is not implemented</string>
     <string name="quote_books_activity_title">Quote books</string>
     <string name="quote_books_import_action">Import</string>
     <string name="quote_books_add_action">Create new</string>
-    <string name="import_dialog_book_title">Book title</string>
+    <string name="import_dialog_title">Book title</string>
     <string name="import_toast_pick_book">Pick a book to import</string>
     <string name="title_exists">A book with this title already exists</string>
     <string name="title_invalid">Invalid title</string>
     <string name="import_failed">Cannot import</string>
-    <string-array name="quote_book_context_menu_items">
+    <string-array name="quote_books_context_menu">
         <item>Rename</item>
         <item>Delete</item>
     </string-array>
     <string name="book_delete_dialog_title">Delete book</string>
     <string name="book_delete_dialog_message">Are you sure you want to delete \"%1$s\"?</string>
-    <string-array name="quote_context_menu_items">
-        <item>Show in widget</item>
-        <item>Edit</item>
+    <string name="quotes_toast_longtap_help">Long tap quote to set on widget</string>
+    <string-array name="quotes_context_menu_for_widget">
+        <item>Set to widget</item>
+        <item>Delete</item>
+    </string-array>
+    <string-array name="quotes_context_menu">
+        <item>Delete</item>
     </string-array>
     <string name="quote_editor_activity_title">Edit quote</string>
     <string name="quote_editor_done">Done</string>

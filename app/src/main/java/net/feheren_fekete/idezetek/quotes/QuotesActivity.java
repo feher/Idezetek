@@ -13,11 +13,13 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import net.feheren_fekete.idezetek.QuotesPreferences;
 import net.feheren_fekete.idezetek.R;
 import net.feheren_fekete.idezetek.model.DataModel;
 import net.feheren_fekete.idezetek.quoteeditor.QuoteEditor;
+import net.feheren_fekete.idezetek.utils.UiUtils;
 import net.feheren_fekete.idezetek.widget.QuotesWidgetService;
 
 public class QuotesActivity extends AppCompatActivity
@@ -116,23 +118,36 @@ public class QuotesActivity extends AppCompatActivity
 
     @Override
     public void onItemClicked(int position) {
+        editQuote(position);
+    }
+
+    @Override
+    public void onItemLongClicked(int position) {
+        int menuResourceId = R.array.quotes_context_menu;
+        int deleteQuoteMenuItem = 0;
+        int setQuoteMenuItem = -1;
         if (ACTION_SET_WIDGET_QUOTE.equals(mIntentAction)
                 && mWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setItems(R.array.quote_context_menu_items, (dialogInterface, i) -> {
-                switch (i) {
-                    case 0:
-                        setQuoteOnWidget(position);
-                        break;
-                    case 1:
-                        editQuote(position);
-                        break;
-                }
-            });
-            builder.create().show();
-        } else {
-            editQuote(position);
+            menuResourceId = R.array.quotes_context_menu_for_widget;
+            setQuoteMenuItem = 0;
+            deleteQuoteMenuItem = 1;
         }
+
+        int finalSetQuoteMenuItem = setQuoteMenuItem;
+        int finalDeleteQuoteMenuItem = deleteQuoteMenuItem;
+        String quoteText = mQuotesAdapter.getQuote(position).getQuote();
+        int truncatedQuoteTextLength = Math.min(quoteText.length(), 20);
+        String truncatedQuoteText = quoteText.substring(0, truncatedQuoteTextLength) + "...";
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(truncatedQuoteText);
+        builder.setItems(menuResourceId, (dialogInterface, i) -> {
+            if (finalSetQuoteMenuItem == i) {
+                setQuoteOnWidget(position);
+            } else if (finalDeleteQuoteMenuItem == i) {
+                deleteQuote(position);
+            }
+        });
+        builder.create().show();
     }
 
     private void initFromIntent(Intent intent) {
@@ -146,6 +161,7 @@ public class QuotesActivity extends AppCompatActivity
                 if (widgetBookTitle.equals(mBookTitle)) {
                     mScrollToQuoteIndex = preferences.getWidgetQuoteIndex(mWidgetId);
                 }
+                UiUtils.showToastAtCenter(this, R.string.quotes_toast_longtap_help, Toast.LENGTH_SHORT);
             }
         } else {
             mBookTitle = intent.getStringExtra(EXTRA_BOOK_TITLE);
@@ -175,6 +191,11 @@ public class QuotesActivity extends AppCompatActivity
         startService(setQuoteIntent);
         setResult(Activity.RESULT_OK);
         finish();
+    }
+
+    private void deleteQuote(int position) {
+        // TODO
+        Toast.makeText(this, R.string.toast_feature_not_implemented, Toast.LENGTH_SHORT).show();
     }
 
 }

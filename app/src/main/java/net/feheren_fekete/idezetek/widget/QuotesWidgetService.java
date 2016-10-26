@@ -172,7 +172,7 @@ public class QuotesWidgetService extends Service implements DataModel.Listener, 
             mWidgetInfos.put(widgetId, widgetInfo);
 
             mQuotesPreferences.setWidgetBookTitle(widgetId, widgetInfo.bookTitle);
-            mQuotesPreferences.setWidgetQuoteIndex(widgetId, 1);
+            mQuotesPreferences.setWidgetQuoteIndex(widgetId, 0);
             Date currentDate = Calendar.getInstance().getTime();
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             String currentDateString = dateFormat.format(currentDate);

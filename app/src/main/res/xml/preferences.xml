@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="Widget">
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:title="Show author"
+            android:key="@string/settings_key_show_author" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:title="Show quote number"
+            android:key="@string/settings_key_show_quote_number" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:title="Show control buttons"
+            android:key="@string/settings_key_show_control_buttons" />
+    </PreferenceCategory>
+</PreferenceScreen>

@@ -10,4 +10,9 @@
         android:icon="@drawable/ic_add"
         android:title="@string/quote_books_add_action"
         app:showAsAction="never"/>
+    <item
+        android:id="@+id/action_settigs"
+        android:icon="@drawable/ic_settings"
+        android:title="@string/quote_books_settings_action"
+        app:showAsAction="never"/>
 </menu>

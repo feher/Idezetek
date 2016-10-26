@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -25,6 +26,7 @@ import net.feheren_fekete.idezetek.QuotesPreferences;
 import net.feheren_fekete.idezetek.R;
 import net.feheren_fekete.idezetek.model.Book;
 import net.feheren_fekete.idezetek.model.DataModel;
+import net.feheren_fekete.idezetek.settings.SettingsActivity;
 import net.feheren_fekete.idezetek.utils.UiUtils;
 
 import java.io.FileNotFoundException;
@@ -55,6 +57,9 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+
         setContentView(R.layout.quote_books_activity);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -114,6 +119,10 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
             }
             case R.id.action_add: {
                 createBook();
+                return true;
+            }
+            case R.id.action_settigs: {
+                openSettings();
                 return true;
             }
             default: {
@@ -185,6 +194,11 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
     private void createBook() {
         // TODO
         Toast.makeText(this, R.string.toast_feature_not_implemented, Toast.LENGTH_SHORT).show();
+    }
+
+    private void openSettings() {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivity(intent);
     }
 
     private void renameBook(Book book) {

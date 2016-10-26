@@ -26,7 +26,6 @@
 
         <TextView
             android:id="@+id/quote_author"
-            android:visibility="gone"
             android:layout_marginTop="20dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -40,7 +39,6 @@
 
     <ImageView
         android:id="@+id/prev_button"
-        android:visibility="gone"
         android:tint="@color/widget_controls"
         android:src="@drawable/ic_navigate_before"
         android:scaleType="center"
@@ -54,7 +52,6 @@
 
     <ImageView
         android:id="@+id/next_button"
-        android:visibility="gone"
         android:tint="@color/widget_controls"
         android:src="@drawable/ic_navigate_next"
         android:scaleType="center"
@@ -68,7 +65,6 @@
 
     <TextView
         android:id="@+id/quote_index"
-        android:visibility="gone"
         android:layout_width="wrap_content"
         android:layout_height="52dp"
         android:gravity="center"

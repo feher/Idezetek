@@ -5,11 +5,15 @@ import android.app.Service;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.transition.Visibility;
 import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
 import android.widget.RemoteViews;
 
 import net.feheren_fekete.idezetek.QuotesPreferences;
@@ -48,7 +52,8 @@ public class QuotesWidgetService extends Service implements DataModel.Listener {
 
     private Calendar mCalendar;
     private DataModel mDataModel;
-    private QuotesPreferences mPreferences;
+    private QuotesPreferences mQuotesPreferences;
+    private SharedPreferences mAppPreferences;
     private AppWidgetManager mAppWidgetManager;
     private Map<Integer, WidgetInfo> mWidgetInfos;
 
@@ -80,13 +85,14 @@ public class QuotesWidgetService extends Service implements DataModel.Listener {
         mCalendar = Calendar.getInstance();
         mDataModel = new DataModel(this);
         mDataModel.setListener(this);
-        mPreferences = new QuotesPreferences(this);
+        mQuotesPreferences = new QuotesPreferences(this);
+        mAppPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mAppWidgetManager = AppWidgetManager.getInstance(this);
         mWidgetInfos = new HashMap<>();
 
         int[] widgetIds = mAppWidgetManager.getAppWidgetIds(new ComponentName(this, QuotesWidgetProvider.class));
         for (int widgetId : widgetIds) {
-            WidgetInfo widgetInfo = new WidgetInfo(widgetId, mPreferences.getWidgetBookTitle(widgetId));
+            WidgetInfo widgetInfo = new WidgetInfo(widgetId, mQuotesPreferences.getWidgetBookTitle(widgetId));
             mWidgetInfos.put(widgetId, widgetInfo);
         }
     }
@@ -158,12 +164,12 @@ public class QuotesWidgetService extends Service implements DataModel.Listener {
             WidgetInfo widgetInfo = new WidgetInfo(widgetId, bookTitle);
             mWidgetInfos.put(widgetId, widgetInfo);
 
-            mPreferences.setWidgetBookTitle(widgetId, widgetInfo.bookTitle);
-            mPreferences.setWidgetQuoteIndex(widgetId, 1);
+            mQuotesPreferences.setWidgetBookTitle(widgetId, widgetInfo.bookTitle);
+            mQuotesPreferences.setWidgetQuoteIndex(widgetId, 1);
             Date currentDate = Calendar.getInstance().getTime();
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             String currentDateString = dateFormat.format(currentDate);
-            mPreferences.setWidgetDateOfLastUpdate(widgetId, currentDateString);
+            mQuotesPreferences.setWidgetDateOfLastUpdate(widgetId, currentDateString);
 
             loadQuotesAndUpdateWidget(widgetInfo);
         }
@@ -176,19 +182,19 @@ public class QuotesWidgetService extends Service implements DataModel.Listener {
 
         Log.d(TAG, "Updating widget " + widgetId);
         WidgetInfo widgetInfo = mWidgetInfos.get(widgetId);
-        String bookTitle = mPreferences.getWidgetBookTitle(widgetId);
+        String bookTitle = mQuotesPreferences.getWidgetBookTitle(widgetId);
 
         if (widgetInfo.bookTitle.equals(bookTitle)) {
             if (!widgetInfo.areQuotesLoaded) {
                 Log.d(TAG, "Loading quotes for widget " + widgetId);
                 loadQuotesAndUpdateWidget(widgetInfo);
             } else if (!widgetInfo.quotes.isEmpty()) {
-                int quoteIndex = mPreferences.getWidgetQuoteIndex(widgetId);
+                int quoteIndex = mQuotesPreferences.getWidgetQuoteIndex(widgetId);
                 if (quoteIndex < 0 || quoteIndex >= widgetInfo.quotes.size()) {
                     quoteIndex = 0;
                 }
 
-                String widgetDate = mPreferences.getWidgetDateOfLastUpdate(widgetId);
+                String widgetDate = mQuotesPreferences.getWidgetDateOfLastUpdate(widgetId);
                 String currentDate = getCurrentDate();
                 Log.d(TAG, "Date check: current " + currentDate + " vs widget " + widgetDate);
                 if (!currentDate.equals(widgetDate)) {
@@ -196,15 +202,56 @@ public class QuotesWidgetService extends Service implements DataModel.Listener {
                     if (quoteIndex >= widgetInfo.quotes.size()) {
                         quoteIndex = 0;
                     }
-                    mPreferences.setWidgetQuoteIndex(widgetId, quoteIndex);
-                    mPreferences.setWidgetDateOfLastUpdate(widgetId, currentDate);
+                    mQuotesPreferences.setWidgetQuoteIndex(widgetId, quoteIndex);
+                    mQuotesPreferences.setWidgetDateOfLastUpdate(widgetId, currentDate);
                 }
 
                 Quote quote = widgetInfo.quotes.get(quoteIndex);
                 RemoteViews views = new RemoteViews(getPackageName(), R.layout.quotes_widget);
                 views.setTextViewText(R.id.quote_text, Html.fromHtml(quote.getQuote()));
-                views.setTextViewText(R.id.quote_author, quote.getAuthor());
-                views.setTextViewText(R.id.quote_index, String.valueOf(quoteIndex + 1));
+
+                boolean showAuthor = mAppPreferences.getBoolean(
+                        getResources().getString(R.string.settings_key_show_author), false);
+                boolean showQuoteNumber = mAppPreferences.getBoolean(
+                        getResources().getString(R.string.settings_key_show_quote_number), false);
+                boolean showControlButtons = mAppPreferences.getBoolean(
+                        getResources().getString(R.string.settings_key_show_control_buttons), false);
+
+                if (showAuthor) {
+                    views.setViewVisibility(R.id.quote_author, View.VISIBLE);
+                    views.setTextViewText(R.id.quote_author, quote.getAuthor());
+                } else {
+                    views.setViewVisibility(R.id.quote_author, View.GONE);
+                }
+
+                if (showQuoteNumber) {
+                    views.setViewVisibility(R.id.quote_index, View.VISIBLE);
+                    views.setTextViewText(R.id.quote_index, String.valueOf(quoteIndex + 1));
+                } else {
+                    views.setViewVisibility(R.id.quote_index, View.GONE);
+                }
+
+                if (showControlButtons) {
+                    views.setViewVisibility(R.id.next_button, View.VISIBLE);
+                    views.setViewVisibility(R.id.prev_button, View.VISIBLE);
+
+                    Intent prevQuoteIntent = new Intent(this, QuotesWidgetService.class);
+                    prevQuoteIntent.setAction(QuotesWidgetService.ACTION_SHOW_PREVIOUS_QUOTE);
+                    prevQuoteIntent.putExtra(QuoteBooksActivity.EXTRA_WIDGET_ID, widgetId);
+                    PendingIntent prevQuotePendingIntent = PendingIntent.getActivity(
+                            this, widgetId + 1, prevQuoteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+                    views.setOnClickPendingIntent(R.id.prev_button, prevQuotePendingIntent);
+
+                    Intent nextQuoteIntent = new Intent(this, QuotesWidgetService.class);
+                    nextQuoteIntent.setAction(QuotesWidgetService.ACTION_SHOW_NEXT_QUOTE);
+                    nextQuoteIntent.putExtra(QuoteBooksActivity.EXTRA_WIDGET_ID, widgetId);
+                    PendingIntent nextQuotePendingIntent = PendingIntent.getActivity(
+                            this, widgetId + 2, nextQuoteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+                    views.setOnClickPendingIntent(R.id.next_button, nextQuotePendingIntent);
+                } else {
+                    views.setViewVisibility(R.id.next_button, View.GONE);
+                    views.setViewVisibility(R.id.prev_button, View.GONE);
+                }
 
                 Intent setQuoteIntent = new Intent(this, QuoteBooksActivity.class);
                 setQuoteIntent.setAction(QuoteBooksActivity.ACTION_SET_WIDGET_QUOTE);
@@ -250,7 +297,7 @@ public class QuotesWidgetService extends Service implements DataModel.Listener {
 
     private void removeWidget(int widgetId) {
         Log.d(TAG, "Removing widget preferences for widget " + widgetId);
-        mPreferences.removeWidgetPreferences(widgetId);
+        mQuotesPreferences.removeWidgetPreferences(widgetId);
         mWidgetInfos.remove(widgetId);
     }
 
@@ -259,12 +306,12 @@ public class QuotesWidgetService extends Service implements DataModel.Listener {
         if (mWidgetInfos.containsKey(widgetId)) {
             WidgetInfo widgetInfo = mWidgetInfos.get(widgetId);
             if (widgetInfo.quotes != null) {
-                int quoteIndex = mPreferences.getWidgetQuoteIndex(widgetId);
+                int quoteIndex = mQuotesPreferences.getWidgetQuoteIndex(widgetId);
                 int nextQuoteIndex = quoteIndex + 1;
                 if (nextQuoteIndex >= widgetInfo.quotes.size()) {
                     nextQuoteIndex = 0;
                 }
-                mPreferences.setWidgetQuoteIndex(widgetId, nextQuoteIndex);
+                mQuotesPreferences.setWidgetQuoteIndex(widgetId, nextQuoteIndex);
                 Log.d(TAG, "Next quote " + nextQuoteIndex);
                 updateWidget(widgetId);
             }
@@ -276,12 +323,12 @@ public class QuotesWidgetService extends Service implements DataModel.Listener {
         if (mWidgetInfos.containsKey(widgetId)) {
             WidgetInfo widgetInfo = mWidgetInfos.get(widgetId);
             if (widgetInfo.quotes != null) {
-                int quoteIndex = mPreferences.getWidgetQuoteIndex(widgetId);
+                int quoteIndex = mQuotesPreferences.getWidgetQuoteIndex(widgetId);
                 int prevQuoteIndex = quoteIndex - 1;
                 if (prevQuoteIndex < 0) {
                     prevQuoteIndex = widgetInfo.quotes.size() - 1;
                 }
-                mPreferences.setWidgetQuoteIndex(widgetId, prevQuoteIndex);
+                mQuotesPreferences.setWidgetQuoteIndex(widgetId, prevQuoteIndex);
                 Log.d(TAG, "Prev quote " + prevQuoteIndex);
                 updateWidget(widgetId);
             }
@@ -299,8 +346,8 @@ public class QuotesWidgetService extends Service implements DataModel.Listener {
                     widgetInfo.clearQuotes();
                 }
                 widgetInfo.bookTitle = bookTitle;
-                mPreferences.setWidgetBookTitle(widgetId, bookTitle);
-                mPreferences.setWidgetQuoteIndex(widgetId, quoteIndex);
+                mQuotesPreferences.setWidgetBookTitle(widgetId, bookTitle);
+                mQuotesPreferences.setWidgetQuoteIndex(widgetId, quoteIndex);
                 updateWidget(widgetId);
             }
         }

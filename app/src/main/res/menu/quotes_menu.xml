@@ -1,0 +1,11 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_jump_to_quote"
+        android:title="@string/quotes_jump_to_quote"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/action_search_quote"
+        android:title="@string/quotes_search_quote"
+        app:showAsAction="never"/>
+</menu>

@@ -23,6 +23,8 @@
     </string-array>
     <string name="book_delete_dialog_title">Delete book</string>
     <string name="book_delete_dialog_message">Are you sure you want to delete \"%1$s\"?</string>
+    <string name="quotes_jump_to_quote">Jump to quote</string>
+    <string name="quotes_search_quote">Search</string>
     <string name="quotes_toast_longtap_help">Long tap quote to set on widget</string>
     <string-array name="quotes_context_menu_for_widget">
         <item>Set to widget</item>

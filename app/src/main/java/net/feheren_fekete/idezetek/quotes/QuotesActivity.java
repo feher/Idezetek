@@ -3,6 +3,7 @@ package net.feheren_fekete.idezetek.quotes;
 import android.app.Activity;
 import android.appwidget.AppWidgetManager;
 import android.content.Intent;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -62,7 +63,7 @@ public class QuotesActivity extends AppCompatActivity
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         DataModel dataModel = new DataModel(this);
         dataModel.setListener(this);
-        mQuotesAdapter = new QuotesAdapter(dataModel);
+        mQuotesAdapter = new QuotesAdapter(dataModel, PreferenceManager.getDefaultSharedPreferences(this));
         mQuotesAdapter.setListener(this);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));

@@ -1,9 +1,12 @@
 <resources>
     <string name="app_name">Idezetek</string>
     <string name="toast_feature_not_implemented">This feature is not implemented</string>
-    <string name="settings_key_show_author">show_author</string>
-    <string name="settings_key_show_quote_number">show_quote_number</string>
-    <string name="settings_key_show_control_buttons">show_control_buttons</string>
+    <string name="settings_app_markup_support">Markup support</string>
+    <string name="settings_app_show_author">Show author</string>
+    <string name="settings_app_show_quote_number">Show quote number</string>
+    <string name="settings_widget_show_author">Show author</string>
+    <string name="settings_widget_show_quote_number">Show quote number</string>
+    <string name="settings_widget_show_prev_next_buttons">Show previous/next buttons</string>
     <string name="quote_books_activity_title">Quote books</string>
     <string name="quote_books_import_action">Import</string>
     <string name="quote_books_add_action">Create new</string>

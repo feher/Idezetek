@@ -9,13 +9,13 @@ import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
-import android.support.transition.Visibility;
 import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
 
+import net.feheren_fekete.idezetek.AppPreferences;
 import net.feheren_fekete.idezetek.QuotesPreferences;
 import net.feheren_fekete.idezetek.R;
 import net.feheren_fekete.idezetek.model.DataModel;
@@ -217,12 +217,9 @@ public class QuotesWidgetService extends Service implements DataModel.Listener, 
                 RemoteViews views = new RemoteViews(getPackageName(), R.layout.quotes_widget);
                 views.setTextViewText(R.id.quote_text, Html.fromHtml(quote.getQuote()));
 
-                boolean showAuthor = mAppPreferences.getBoolean(
-                        getResources().getString(R.string.settings_key_show_author), false);
-                boolean showQuoteNumber = mAppPreferences.getBoolean(
-                        getResources().getString(R.string.settings_key_show_quote_number), false);
-                boolean showControlButtons = mAppPreferences.getBoolean(
-                        getResources().getString(R.string.settings_key_show_control_buttons), false);
+                boolean showAuthor = mAppPreferences.getBoolean(AppPreferences.KEY_WIDGET_SHOW_AUTHOR, false);
+                boolean showQuoteNumber = mAppPreferences.getBoolean(AppPreferences.KEY_WIDGET_SHOW_QUOTE_NUMBER, false);
+                boolean showPrevNextButtons = mAppPreferences.getBoolean(AppPreferences.KEY_WIDGET_SHOW_PREV_NEXT_BUTTONS, false);
 
                 if (showAuthor) {
                     views.setViewVisibility(R.id.quote_author, View.VISIBLE);
@@ -238,7 +235,7 @@ public class QuotesWidgetService extends Service implements DataModel.Listener, 
                     views.setViewVisibility(R.id.quote_index, View.GONE);
                 }
 
-                if (showControlButtons) {
+                if (showPrevNextButtons) {
                     views.setViewVisibility(R.id.next_button, View.VISIBLE);
                     views.setViewVisibility(R.id.prev_button, View.VISIBLE);
 

@@ -1,19 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory android:title="Widget">
-
+    <PreferenceCategory android:title="App">
         <SwitchPreference
             android:defaultValue="false"
-            android:title="Show author"
-            android:key="@string/settings_key_show_author" />
+            android:title="@string/settings_app_markup_support"
+            android:key="app_enable_markup" />
         <SwitchPreference
             android:defaultValue="false"
-            android:title="Show quote number"
-            android:key="@string/settings_key_show_quote_number" />
+            android:title="@string/settings_app_show_author"
+            android:key="app_show_author" />
         <SwitchPreference
             android:defaultValue="false"
-            android:title="Show control buttons"
-            android:key="@string/settings_key_show_control_buttons" />
+            android:title="@string/settings_app_show_quote_number"
+            android:key="app_show_quote_number" />
     </PreferenceCategory>
+
+    <PreferenceCategory android:title="Widget">
+        <SwitchPreference
+            android:defaultValue="false"
+            android:title="@string/settings_widget_show_author"
+            android:key="widget_show_author" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:title="@string/settings_widget_show_quote_number"
+            android:key="widget_show_quote_number" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:title="@string/settings_widget_show_prev_next_buttons"
+            android:key="widget_show_prev_next_buttons" />
+    </PreferenceCategory>
+
 </PreferenceScreen>

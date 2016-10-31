@@ -1,5 +1,7 @@
 package net.feheren_fekete.idezetek.quotes;
 
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
@@ -9,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import net.feheren_fekete.idezetek.AppPreferences;
 import net.feheren_fekete.idezetek.R;
 import net.feheren_fekete.idezetek.model.DataModel;
 import net.feheren_fekete.idezetek.model.Quote;
@@ -32,15 +35,18 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
         public LinearLayout layout;
         public TextView quoteText;
         public TextView quoteAuthor;
+        public TextView quoteNumber;
         public QuoteViewHolder(View view) {
             super(view);
             layout = (LinearLayout) view.findViewById(R.id.root_layout);
             quoteText = (TextView) view.findViewById(R.id.quote_text);
             quoteAuthor = (TextView) view.findViewById(R.id.quote_author);
+            quoteNumber = (TextView) view.findViewById(R.id.quote_number);
         }
     }
 
     private DataModel mDataModel;
+    private SharedPreferences mAppPreferences;
     private List<Quote> mQuotes;
     private List<String> mAuthors;
     private @Nullable Listener mListener;
@@ -48,8 +54,9 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
     private int mSelectedItemColor;
     private int mNormalItemColor;
 
-    public QuotesAdapter(DataModel dataModel) {
+    public QuotesAdapter(DataModel dataModel, SharedPreferences appPreferences) {
         mDataModel = dataModel;
+        mAppPreferences = appPreferences;
         mQuotes = new ArrayList<>();
         mAuthors = new ArrayList<>();
         mSelectedItemPosition = -1;
@@ -102,10 +109,16 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
 
         holder.quoteText.setText(Html.fromHtml(quote.getQuote()));
 
-        if (mAuthors.size() == 1) {
-            holder.quoteAuthor.setVisibility(View.GONE);
-        } else {
+        if (mAppPreferences.getBoolean(AppPreferences.KEY_APP_SHOW_AUTHOR, false)) {
             holder.quoteAuthor.setText(quote.getAuthor());
+        } else {
+            holder.quoteAuthor.setVisibility(View.GONE);
+        }
+
+        if (mAppPreferences.getBoolean(AppPreferences.KEY_APP_SHOW_QUOTE_NUMBER, false)) {
+            holder.quoteNumber.setText("(" + String.valueOf(position + 1) + ")");
+        } else {
+            holder.quoteNumber.setVisibility(View.GONE);
         }
 
         if (position == mSelectedItemPosition) {

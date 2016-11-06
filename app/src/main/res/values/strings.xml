@@ -2,6 +2,7 @@
     <string name="app_name">Idezetek</string>
     <string name="toast_feature_not_implemented">This feature is not implemented</string>
     <string name="settings_app_markup_support">Markup support</string>
+    <string name="settings_app_markup_support_summary">Allow HTML formatting in quotes.</string>
     <string name="settings_app_show_author">Show author</string>
     <string name="settings_app_show_quote_number">Show quote number</string>
     <string name="settings_widget_show_author">Show author</string>

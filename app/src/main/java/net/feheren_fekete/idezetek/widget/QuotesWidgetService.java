@@ -9,7 +9,6 @@ import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
-import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -21,6 +20,7 @@ import net.feheren_fekete.idezetek.R;
 import net.feheren_fekete.idezetek.model.DataModel;
 import net.feheren_fekete.idezetek.model.Quote;
 import net.feheren_fekete.idezetek.quotebooks.QuoteBooksActivity;
+import net.feheren_fekete.idezetek.utils.StringUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -215,7 +215,7 @@ public class QuotesWidgetService extends Service implements DataModel.Listener, 
 
                 Quote quote = widgetInfo.quotes.get(quoteIndex);
                 RemoteViews views = new RemoteViews(getPackageName(), R.layout.quotes_widget);
-                views.setTextViewText(R.id.quote_text, Html.fromHtml(quote.getQuote()));
+                views.setTextViewText(R.id.quote_text, StringUtils.prepareTextWithMarkup(quote.getQuote(), mAppPreferences));
 
                 boolean showAuthor = mAppPreferences.getBoolean(AppPreferences.KEY_WIDGET_SHOW_AUTHOR, false);
                 boolean showQuoteNumber = mAppPreferences.getBoolean(AppPreferences.KEY_WIDGET_SHOW_QUOTE_NUMBER, false);

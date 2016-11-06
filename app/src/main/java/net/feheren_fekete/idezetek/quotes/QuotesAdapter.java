@@ -1,10 +1,8 @@
 package net.feheren_fekete.idezetek.quotes;
 
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
-import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +13,7 @@ import net.feheren_fekete.idezetek.AppPreferences;
 import net.feheren_fekete.idezetek.R;
 import net.feheren_fekete.idezetek.model.DataModel;
 import net.feheren_fekete.idezetek.model.Quote;
+import net.feheren_fekete.idezetek.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -107,7 +106,7 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
     public void onBindViewHolder(QuoteViewHolder holder, int position) {
         Quote quote = mQuotes.get(position);
 
-        holder.quoteText.setText(Html.fromHtml(quote.getQuote()));
+        holder.quoteText.setText(StringUtils.prepareTextWithMarkup(quote.getQuote(), mAppPreferences));
 
         if (mAppPreferences.getBoolean(AppPreferences.KEY_APP_SHOW_AUTHOR, false)) {
             holder.quoteAuthor.setText(quote.getAuthor());

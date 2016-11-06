@@ -5,6 +5,7 @@
         <SwitchPreference
             android:defaultValue="false"
             android:title="@string/settings_app_markup_support"
+            android:summary="@string/settings_app_markup_support_summary"
             android:key="app_enable_markup" />
         <SwitchPreference
             android:defaultValue="false"

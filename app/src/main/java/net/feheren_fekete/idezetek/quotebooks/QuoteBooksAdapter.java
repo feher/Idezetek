@@ -14,7 +14,9 @@ import net.feheren_fekete.idezetek.model.DataModel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
+import bolts.Continuation;
 import bolts.Task;
 
 public class QuoteBooksAdapter extends RecyclerView.Adapter<QuoteBooksAdapter.ItemViewHolder> {
@@ -49,16 +51,22 @@ public class QuoteBooksAdapter extends RecyclerView.Adapter<QuoteBooksAdapter.It
     }
 
     public void loadItems() {
-        Task.callInBackground(() -> {
-            mDataModel.initDefaultQuotes();
-            return mDataModel.loadBooks();
-        }).continueWith((task) -> {
-            mBooks = task.getResult();
-            notifyDataSetChanged();
-            if (mListener != null) {
-                mListener.onItemsLoaded();
+        Task.callInBackground(new Callable<List<Book>>() {
+            @Override
+            public List<Book> call() throws Exception {
+                mDataModel.initDefaultQuotes();
+                return mDataModel.loadBooks();
             }
-            return null;
+        }).continueWith(new Continuation<List<Book>, Void>() {
+            @Override
+            public Void then(Task<List<Book>> task) throws Exception {
+                mBooks = task.getResult();
+                notifyDataSetChanged();
+                if (mListener != null) {
+                    mListener.onItemsLoaded();
+                }
+                return null;
+            }
         }, Task.UI_THREAD_EXECUTOR);
     }
 
@@ -73,16 +81,22 @@ public class QuoteBooksAdapter extends RecyclerView.Adapter<QuoteBooksAdapter.It
     public void onBindViewHolder(ItemViewHolder holder, int position) {
         final Book book = mBooks.get(position);
         holder.title.setText(book.getTitle());
-        holder.rootLayout.setOnClickListener(view -> {
-            if (mListener != null) {
-                mListener.onItemClicked(book);
+        holder.rootLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mListener != null) {
+                    mListener.onItemClicked(book);
+                }
             }
         });
-        holder.rootLayout.setOnLongClickListener((view) -> {
-            if (mListener != null) {
-                mListener.onItemLongClicked(book);
+        holder.rootLayout.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (mListener != null) {
+                    mListener.onItemLongClicked(book);
+                }
+                return true;
             }
-            return true;
         });
     }
 

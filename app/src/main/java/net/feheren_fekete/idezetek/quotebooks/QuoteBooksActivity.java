@@ -2,6 +2,7 @@ package net.feheren_fekete.idezetek.quotebooks;
 
 import android.app.Activity;
 import android.appwidget.AppWidgetManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
@@ -31,7 +32,9 @@ import net.feheren_fekete.idezetek.utils.UiUtils;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.concurrent.Callable;
 
+import bolts.Continuation;
 import bolts.Task;
 
 public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksAdapter.Listener {
@@ -148,17 +151,20 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
     }
 
     @Override
-    public void onItemLongClicked(Book book) {
+    public void onItemLongClicked(final Book book) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(book.getTitle());
-        builder.setItems(R.array.quote_books_context_menu, (dialogInterface, i) -> {
-            switch (i) {
-                case 0:
-                    renameBook(book);
-                    break;
-                case 1:
-                    deleteBook(book);
-                    break;
+        builder.setItems(R.array.quote_books_context_menu, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0:
+                        renameBook(book);
+                        break;
+                    case 1:
+                        deleteBook(book);
+                        break;
+                }
             }
         });
         builder.create().show();
@@ -201,88 +207,150 @@ public class QuoteBooksActivity extends AppCompatActivity implements QuoteBooksA
         startActivity(intent);
     }
 
-    private void renameBook(Book book) {
-        EditText input = new EditText(this);
+    private void renameBook(final Book book) {
+        final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         input.setText(book.getTitle());
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.import_dialog_title);
         builder.setView(input);
-        builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
-            String newTitle = input.getText().toString().trim();
-            if (mDataModel.doesBookExist(newTitle)) {
-                UiUtils.showToastAtCenter(this, R.string.title_exists, Toast.LENGTH_SHORT);
-                mHandler.post(() -> renameBook(book));
-            } else if (newTitle.isEmpty()) {
-                UiUtils.showToastAtCenter(this, R.string.title_invalid, Toast.LENGTH_SHORT);
-                mHandler.post(() -> renameBook(book));
-            } else {
-                book.setTitle(newTitle);
-                Task.callInBackground(() -> {
-                    mDataModel.updateBook(book);
-                    return null;
-                }).continueWith((task) -> {
-                    mQuoteBooksAdapter.loadItems();
-                    return null;
-                }, Task.UI_THREAD_EXECUTOR);
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String newTitle = input.getText().toString().trim();
+                if (mDataModel.doesBookExist(newTitle)) {
+                    UiUtils.showToastAtCenter(QuoteBooksActivity.this, R.string.title_exists, Toast.LENGTH_SHORT);
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            renameBook(book);
+                        }
+                    });
+                } else if (newTitle.isEmpty()) {
+                    UiUtils.showToastAtCenter(QuoteBooksActivity.this, R.string.title_invalid, Toast.LENGTH_SHORT);
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            renameBook(book);
+                        }
+                    });
+                } else {
+                    book.setTitle(newTitle);
+                    Task.callInBackground(new Callable<Void>() {
+                        @Override
+                        public Void call() throws Exception {
+                            mDataModel.updateBook(book);
+                            return null;
+                        }
+                    }).continueWith(new Continuation<Void, Void>() {
+                        @Override
+                        public Void then(Task<Void> task) throws Exception {
+                            mQuoteBooksAdapter.loadItems();
+                            return null;
+                        }
+                    }, Task.UI_THREAD_EXECUTOR);
+                }
             }
         });
-        builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel());
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
         builder.create().show();
     }
 
-    private void deleteBook(Book book) {
+    private void deleteBook(final Book book) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.book_delete_dialog_title);
         builder.setMessage(String.format(getResources().getString(R.string.book_delete_dialog_message), book.getTitle()));
-        builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
-            Task.callInBackground(() -> {
-                mDataModel.deleteBook(book);
-                return null;
-            }).continueWith((task) -> {
-                mQuoteBooksAdapter.loadItems();
-                return null;
-            }, Task.UI_THREAD_EXECUTOR);
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Task.callInBackground(new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        mDataModel.deleteBook(book);
+                        return null;
+                    }
+                }).continueWith(new Continuation<Void, Void>() {
+                    @Override
+                    public Void then(Task<Void> task) throws Exception {
+                        mQuoteBooksAdapter.loadItems();
+                        return null;
+                    }
+                }, Task.UI_THREAD_EXECUTOR);
+            }
         });
-        builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel());
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
         builder.create().show();
 
     }
 
-    private void askTitleAndImport(Uri bookUri) {
-        EditText input = new EditText(this);
+    private void askTitleAndImport(final Uri bookUri) {
+        final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_TEXT);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.import_dialog_title);
         builder.setView(input);
-        builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
-            String title = input.getText().toString().trim();
-            if (mDataModel.doesBookExist(title)) {
-                UiUtils.showToastAtCenter(this, R.string.title_exists, Toast.LENGTH_SHORT);
-                mHandler.post(() -> askTitleAndImport(bookUri));
-            } else if (title.isEmpty()) {
-                UiUtils.showToastAtCenter(this, R.string.title_invalid, Toast.LENGTH_SHORT);
-                mHandler.post(() -> askTitleAndImport(bookUri));
-            } else {
-                try {
-                    InputStream inputStream = getContentResolver().openInputStream(bookUri);
-                    Task.callInBackground(() -> {
-                        mDataModel.importQuotes(inputStream, title);
-                        return null;
-                    }).continueWith((task) -> {
-                        mQuoteBooksAdapter.loadItems();
-                        return null;
-                    }, Task.UI_THREAD_EXECUTOR);
-                } catch (FileNotFoundException e) {
-                    Toast.makeText(this, R.string.import_failed, Toast.LENGTH_LONG).show();
-                    // TODO: Report error.
-                    Log.e(TAG, "Cannot import quotes", e);
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                final String title = input.getText().toString().trim();
+                if (mDataModel.doesBookExist(title)) {
+                    UiUtils.showToastAtCenter(QuoteBooksActivity.this, R.string.title_exists, Toast.LENGTH_SHORT);
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            askTitleAndImport(bookUri);
+                        }
+                    });
+                } else if (title.isEmpty()) {
+                    UiUtils.showToastAtCenter(QuoteBooksActivity.this, R.string.title_invalid, Toast.LENGTH_SHORT);
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            askTitleAndImport(bookUri);
+                        }
+                    });
+                } else {
+                    try {
+                        final InputStream inputStream = getContentResolver().openInputStream(bookUri);
+                        Task.callInBackground(new Callable<Void>() {
+                            @Override
+                            public Void call() throws Exception {
+                                mDataModel.importQuotes(inputStream, title);
+                                return null;
+                            }
+                        }).continueWith(new Continuation<Void, Void>() {
+                            @Override
+                            public Void then(Task<Void> task) throws Exception {
+                                mQuoteBooksAdapter.loadItems();
+                                return null;
+                            }
+                        }, Task.UI_THREAD_EXECUTOR);
+                    } catch (FileNotFoundException e) {
+                        Toast.makeText(QuoteBooksActivity.this, R.string.import_failed, Toast.LENGTH_LONG).show();
+                        // TODO: Report error.
+                        Log.e(TAG, "Cannot import quotes", e);
+                    }
                 }
             }
         });
-        builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel());
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
         builder.create().show();
     }
 

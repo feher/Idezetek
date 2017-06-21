@@ -18,7 +18,9 @@ import net.feheren_fekete.idezetek.model.Quote;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 
+import bolts.Continuation;
 import bolts.Task;
 
 public class QuoteEditor extends AppCompatActivity {
@@ -66,13 +68,19 @@ public class QuoteEditor extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        Task.callInBackground(() -> {
-            return mDataModel.loadQuotes(mBookTitle);
-        }).continueWith((task) -> {
-            mQuotes = task.getResult();
-            mQuoteAuthorEditText.setText(mQuotes.get(mQuoteIndex).getAuthor());
-            mQuoteEditText.setText(mQuotes.get(mQuoteIndex).getQuote());
-            return null;
+        Task.callInBackground(new Callable<List<Quote>>() {
+            @Override
+            public List<Quote> call() throws Exception {
+                return mDataModel.loadQuotes(mBookTitle);
+            }
+        }).continueWith(new Continuation<List<Quote>, Void>() {
+            @Override
+            public Void then(Task<List<Quote>> task) throws Exception {
+                mQuotes = task.getResult();
+                mQuoteAuthorEditText.setText(mQuotes.get(mQuoteIndex).getAuthor());
+                mQuoteEditText.setText(mQuotes.get(mQuoteIndex).getQuote());
+                return null;
+            }
         }, Task.UI_THREAD_EXECUTOR);
     }
 
@@ -102,7 +110,6 @@ public class QuoteEditor extends AppCompatActivity {
             }
         }
     }
-
 
     private void initFromIntent(Intent intent) {
         mBookTitle = intent.getStringExtra(EXTRA_BOOK_TITLE);
@@ -135,14 +142,20 @@ public class QuoteEditor extends AppCompatActivity {
             Quote quote = mQuotes.get(mQuoteIndex);
             quote.setAuthor(quoteAuthor);
             quote.setQuote(quoteText);
-            Task.callInBackground(() -> {
-                return mDataModel.updateQuotes(mBookTitle, mQuotes);
-            }).continueWith((task) -> {
-                boolean isOk = task.getResult();
-                if (!isOk) {
-                    Toast.makeText(this, "Cannot save quote", Toast.LENGTH_SHORT).show();
+            Task.callInBackground(new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    return mDataModel.updateQuotes(mBookTitle, mQuotes);
                 }
-                return null;
+            }).continueWith(new Continuation<Boolean, Void>() {
+                @Override
+                public Void then(Task<Boolean> task) throws Exception {
+                    boolean isOk = task.getResult();
+                    if (!isOk) {
+                        Toast.makeText(QuoteEditor.this, "Cannot save quote", Toast.LENGTH_SHORT).show();
+                    }
+                    return null;
+                }
             }, Task.UI_THREAD_EXECUTOR);
             return true;
         }

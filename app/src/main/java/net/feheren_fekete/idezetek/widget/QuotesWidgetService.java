@@ -30,7 +30,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
+import bolts.Continuation;
 import bolts.Task;
 
 public class QuotesWidgetService extends Service implements DataModel.Listener, SharedPreferences.OnSharedPreferenceChangeListener {
@@ -283,12 +285,18 @@ public class QuotesWidgetService extends Service implements DataModel.Listener, 
 
     private void loadQuotesAndUpdateWidget(final WidgetInfo widgetInfo) {
         Log.d(TAG, "Loading quotes for widget " + widgetInfo.widgetId);
-        Task.callInBackground(() -> {
-            return mDataModel.loadQuotes(widgetInfo.bookTitle);
-        }).continueWith((task) -> {
-            widgetInfo.setQuotes(task.getResult());
-            updateWidget(widgetInfo.widgetId);
-            return null;
+        Task.callInBackground(new Callable<List<Quote>>() {
+            @Override
+            public List<Quote> call() throws Exception {
+                return mDataModel.loadQuotes(widgetInfo.bookTitle);
+            }
+        }).continueWith(new Continuation<List<Quote>, Void>() {
+            @Override
+            public Void then(Task<List<Quote>> task) throws Exception {
+                widgetInfo.setQuotes(task.getResult());
+                updateWidget(widgetInfo.widgetId);
+                return null;
+            }
         }, Task.UI_THREAD_EXECUTOR);
     }
 

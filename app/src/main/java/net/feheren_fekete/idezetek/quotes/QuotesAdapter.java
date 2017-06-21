@@ -19,7 +19,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
+import bolts.Continuation;
 import bolts.Task;
 
 public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewHolder> {
@@ -41,6 +43,23 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
             quoteText = (TextView) view.findViewById(R.id.quote_text);
             quoteAuthor = (TextView) view.findViewById(R.id.quote_author);
             quoteNumber = (TextView) view.findViewById(R.id.quote_number);
+            layout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mListener != null) {
+                        mListener.onItemClicked(getAdapterPosition());
+                    }
+                }
+            });
+            layout.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    if (mListener != null) {
+                        mListener.onItemLongClicked(getAdapterPosition());
+                    }
+                    return true;
+                }
+            });
         }
     }
 
@@ -68,17 +87,23 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
 
     public void loadItems(final String bookTitle) {
         mAuthors.clear();
-        Task.callInBackground(() -> {
-            mDataModel.initDefaultQuotes();
-            return mDataModel.loadQuotes(bookTitle);
-        }).continueWith((task) -> {
-            mQuotes = task.getResult();
-            mAuthors = extractAuthors(mQuotes);
-            notifyDataSetChanged();
-            if (mListener != null) {
-                mListener.onItemsLoaded();
+        Task.callInBackground(new Callable<List<Quote>>() {
+            @Override
+            public List<Quote> call() throws Exception {
+                mDataModel.initDefaultQuotes();
+                return mDataModel.loadQuotes(bookTitle);
             }
-            return null;
+        }).continueWith(new Continuation<List<Quote>, Void>() {
+            @Override
+            public Void then(Task<List<Quote>> task) throws Exception {
+                mQuotes = task.getResult();
+                mAuthors = extractAuthors(mQuotes);
+                notifyDataSetChanged();
+                if (mListener != null) {
+                    mListener.onItemsLoaded();
+                }
+                return null;
+            }
         }, Task.UI_THREAD_EXECUTOR);
     }
 
@@ -103,7 +128,7 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
     }
 
     @Override
-    public void onBindViewHolder(QuoteViewHolder holder, int position) {
+    public void onBindViewHolder(final QuoteViewHolder holder, int position) {
         Quote quote = mQuotes.get(position);
 
         holder.quoteText.setText(StringUtils.prepareTextWithMarkup(quote.getQuote(), mAppPreferences));
@@ -131,19 +156,6 @@ public class QuotesAdapter extends RecyclerView.Adapter<QuotesAdapter.QuoteViewH
             }
             holder.layout.setBackgroundColor(mNormalItemColor);
         }
-
-        holder.layout.setOnClickListener(view -> {
-            if (mListener != null) {
-                mListener.onItemClicked(position);
-            }
-        });
-
-        holder.layout.setOnLongClickListener(view -> {
-            if (mListener != null) {
-                mListener.onItemLongClicked(position);
-            }
-            return true;
-        });
     }
 
     @Override

@@ -2,6 +2,7 @@ package net.feheren_fekete.idezetek.quotes;
 
 import android.app.Activity;
 import android.appwidget.AppWidgetManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
@@ -138,7 +139,7 @@ public class QuotesActivity extends AppCompatActivity
     }
 
     @Override
-    public void onItemLongClicked(int position) {
+    public void onItemLongClicked(final int position) {
         int menuResourceId = R.array.quotes_context_menu;
         int deleteQuoteMenuItem = 0;
         int setQuoteMenuItem = -1;
@@ -149,18 +150,21 @@ public class QuotesActivity extends AppCompatActivity
             deleteQuoteMenuItem = 1;
         }
 
-        int finalSetQuoteMenuItem = setQuoteMenuItem;
-        int finalDeleteQuoteMenuItem = deleteQuoteMenuItem;
+        final int finalSetQuoteMenuItem = setQuoteMenuItem;
+        final int finalDeleteQuoteMenuItem = deleteQuoteMenuItem;
         String quoteText = mQuotesAdapter.getQuote(position).getQuote();
         int truncatedQuoteTextLength = Math.min(quoteText.length(), 20);
         String truncatedQuoteText = quoteText.substring(0, truncatedQuoteTextLength) + "...";
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(truncatedQuoteText);
-        builder.setItems(menuResourceId, (dialogInterface, i) -> {
-            if (finalSetQuoteMenuItem == i) {
-                setQuoteOnWidget(position);
-            } else if (finalDeleteQuoteMenuItem == i) {
-                deleteQuote(position);
+        builder.setItems(menuResourceId, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (finalSetQuoteMenuItem == which) {
+                    setQuoteOnWidget(position);
+                } else if (finalDeleteQuoteMenuItem == which) {
+                    deleteQuote(position);
+                }
             }
         });
         builder.create().show();
